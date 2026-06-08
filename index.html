@@ -23,20 +23,18 @@
 body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 .page{max-width:1080px;margin:0 auto;padding:28px 24px 40px}
 
-/* Header */
 .hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:24px}
 .hdr-title{font-size:17px;font-weight:500;color:var(--navy)}
 .hdr-meta{font-size:11px;color:var(--text3);font-family:var(--mono);text-align:right;line-height:1.7}
 
-/* Section label */
 .sec{font-size:10px;font-weight:500;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .sec::after{content:'';flex:1;height:.5px;background:var(--border)}
 .mb18{margin-bottom:18px}
 .mb24{margin-bottom:24px}
 
-/* KPI grid */
+/* KPI */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.kpi{background:var(--surface);border-radius:8px;border:.5px solid var(--border);padding:14px 16px;position:relative;overflow:hidden}
+.kpi{background:var(--surface);border-radius:8px;border:.5px solid var(--border);padding:14px 16px;position:relative;overflow:hidden;transition:all .2s}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .kpi.c-navy::before{background:var(--navy)}
 .kpi.c-blue::before{background:var(--blue)}
@@ -55,6 +53,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 .pill{display:inline-flex;align-items:center;gap:2px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;margin-top:6px}
 .pill-dn{background:var(--red-lt);color:var(--red-dk)}
 .pill-up{background:var(--green-lt);color:var(--green-dk)}
+.pill-flat{background:var(--bg);color:var(--text2);border:.5px solid var(--border)}
 
 /* Efficiency */
 .eff-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -62,8 +61,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:14
 .eff-l{font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
 .eff-v{font-size:26px;font-weight:500;margin-bottom:4px}
 .bar-wrap{height:4px;background:var(--border);border-radius:2px;margin:10px 0 6px;overflow:hidden}
-.bar{height:100%;border-radius:2px}
+.bar{height:100%;border-radius:2px;transition:width .4s}
 .eff-n{font-size:12px;color:var(--text2);line-height:1.6}
+
+/* Price input panel */
+.input-panel{background:var(--surface);border-radius:10px;border:.5px solid var(--border);overflow:hidden;margin-bottom:24px}
+.input-panel-head{padding:12px 18px;background:var(--bg);border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.input-panel-title{font-size:12px;font-weight:500;color:var(--text)}
+.input-panel-note{font-size:11px;color:var(--text3)}
+.input-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.input-item{padding:10px 14px;border-bottom:.5px solid var(--border);border-right:.5px solid var(--border)}
+.input-item:nth-child(4n){border-right:none}
+.input-item:nth-last-child(-n+4){border-bottom:none}
+.input-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center}
+.input-code{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.input-wrap{display:flex;align-items:center;gap:6px}
+.price-input{width:80px;padding:4px 8px;border:.5px solid var(--border2);border-radius:5px;font-size:13px;font-family:var(--mono);color:var(--text);background:var(--bg);text-align:right;outline:none;transition:border .15s}
+.price-input:focus{border-color:var(--blue);background:var(--surface)}
+.input-chg{font-size:11px;font-family:var(--mono);min-width:52px;text-align:right}
+.reset-btn{padding:6px 14px;border-radius:6px;border:.5px solid var(--border2);font-size:12px;font-family:var(--font);color:var(--text2);background:transparent;cursor:pointer;transition:all .15s}
+.reset-btn:hover{background:var(--bg);color:var(--text)}
+
+/* Month tabs */
+.month-tabs{display:flex;gap:6px;margin-bottom:10px}
+.mtab{padding:5px 14px;border-radius:6px;border:.5px solid var(--border);font-size:12px;cursor:pointer;background:transparent;color:var(--text2);font-family:var(--font);transition:all .15s}
+.mtab:hover{background:var(--bg)}
+.mtab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 
 /* Div cards */
 .div-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
@@ -81,7 +104,6 @@ thead th:first-child{text-align:left}
 thead th:hover{color:var(--text)}
 thead th.sa::after{content:' ↑';color:var(--navy)}
 thead th.sd::after{content:' ↓';color:var(--navy)}
-tbody tr{transition:background .1s}
 tbody tr:hover{background:var(--bg)}
 tbody td{padding:9px 10px;text-align:right;border-bottom:.5px solid var(--border);color:var(--text);white-space:nowrap;font-family:var(--mono)}
 tbody td:first-child{text-align:left;font-family:var(--font)}
@@ -92,11 +114,11 @@ tbody td:first-child{text-align:left;font-family:var(--font)}
 .bdg-conf{background:#D1FAE5;color:#065F46}
 .bdg-est{background:var(--amber-lt);color:var(--amber-dk)}
 
-/* Action cards */
+/* Action */
 .ac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .ac{border-radius:10px;border:.5px solid var(--border);background:var(--surface);overflow:hidden}
 .ac-head{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:.5px solid var(--border);background:var(--bg)}
-.ac-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
+.ac-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
 .ac-title{font-size:12px;font-weight:500;color:var(--text)}
 .ac-row{display:flex;align-items:flex-start;gap:9px;padding:8px 14px;border-bottom:.5px solid var(--border)}
 .ac-row:last-child{border-bottom:none}
@@ -105,30 +127,24 @@ tbody td:first-child{text-align:left;font-family:var(--font)}
 .ac-tag{font-size:10px;color:var(--text3);margin-left:4px;font-weight:400}
 .ac-note{font-size:11px;color:var(--text2);line-height:1.45}
 
-/* Chart */
-.chart-wrap{position:relative;width:100%}
-
-/* Responsive */
 @media(max-width:800px){
-  .kpi-row,.mom-row,.eff-row{grid-template-columns:1fr 1fr}
+  .kpi-row,.mom-row,.eff-row,.input-grid{grid-template-columns:1fr 1fr}
   .div-row{grid-template-columns:repeat(2,1fr)}
   .ac-grid{grid-template-columns:1fr}
 }
-
 footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);border-top:.5px solid var(--border);margin-top:32px}
 </style>
 </head>
 <body>
 <div class="page">
 
-  <!-- Header -->
   <div class="hdr">
     <div>
       <div class="hdr-title">特別股投資報告</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono)">12 檔持股　｜　機密　｜　公司內部使用</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono)">12 檔持股　｜　公司內部使用</div>
     </div>
     <div class="hdr-meta">
-      <div>截至 2026-05-29 收盤</div>
+      <div id="hdr-date">截至 2026-05-29 收盤</div>
       <div>上期比較基準：2026-04-30</div>
     </div>
   </div>
@@ -142,69 +158,81 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
       <div class="kpi-s">新台幣</div>
     </div>
     <div class="kpi c-blue">
-      <div class="kpi-l">5/29 市值</div>
-      <div class="kpi-v" style="color:var(--blue)">$1.996 億</div>
+      <div class="kpi-l">目前市值</div>
+      <div class="kpi-v" id="kpi-mkt" style="color:var(--blue)">—</div>
       <div class="kpi-s">新台幣</div>
     </div>
     <div class="kpi c-green">
-      <div class="kpi-l">預估年領股利</div>
-      <div class="kpi-v" style="color:var(--green)">$8.58M</div>
-      <div class="kpi-s">平均殖利率 4.29%</div>
+      <div class="kpi-l">未實現利得</div>
+      <div class="kpi-v" id="kpi-gain">—</div>
+      <div class="kpi-s" id="kpi-gain-pct"></div>
     </div>
     <div class="kpi c-teal">
       <div class="kpi-l">年化總報酬率</div>
-      <div class="kpi-v" style="color:var(--teal)">+4.11%</div>
-      <div class="kpi-s">殖利率 4.29% − 帳損 0.18%</div>
+      <div class="kpi-v" id="kpi-ret" style="color:var(--teal)">—</div>
+      <div class="kpi-s" id="kpi-ret-sub"></div>
     </div>
   </div>
 
   <!-- ② 月對月比較 -->
-  <div class="sec mb18">月對月比較　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">以 5/29 實際持股，分別套入 4/30 及 5/29 收盤價計算</span></div>
+  <div class="sec mb18">
+    月對月比較
+    <span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">以現有持股，套入各期收盤價計算</span>
+  </div>
+  <div class="month-tabs">
+    <button class="mtab active" data-prev="430">對比 4/30</button>
+    <button class="mtab" data-prev="529">對比 5/29（基準）</button>
+  </div>
   <div class="mom-row" style="margin-bottom:8px">
     <div class="mom-card">
-      <div class="mom-l">4/30 收盤　帳面利得</div>
-      <div class="mom-v" style="color:var(--blue)">−$75K</div>
-      <div class="mom-s">佔投入 −0.04%</div>
+      <div class="mom-l" id="mom-prev-label">4/30 收盤　帳面利得</div>
+      <div class="mom-v" id="mom-prev-val">—</div>
+      <div class="mom-s" id="mom-prev-pct"></div>
     </div>
     <div class="mom-card">
-      <div class="mom-l">5/29 收盤　帳面利得</div>
-      <div class="mom-v" style="color:var(--red)">−$357K</div>
-      <div class="mom-s">佔投入 −0.18%</div>
+      <div class="mom-l" id="mom-curr-label">目前收盤　帳面利得</div>
+      <div class="mom-v" id="mom-curr-val">—</div>
+      <div class="mom-s" id="mom-curr-pct"></div>
     </div>
     <div class="mom-card">
-      <div class="mom-l">單月變化</div>
-      <div class="mom-v" style="color:var(--red)">−$282K</div>
-      <div class="pill pill-dn">↓ 本月帳損擴大</div>
+      <div class="mom-l">變化</div>
+      <div class="mom-v" id="mom-delta">—</div>
+      <div id="mom-pill"></div>
     </div>
   </div>
-  <div style="font-size:11px;color:var(--text3);margin-bottom:24px;padding-left:2px">
-    主因：台新戊特、國泰甲特、富邦甲特等大部位收盤價下滑，拉大整體帳損。股利收益不受影響。
-  </div>
+  <div id="mom-note" style="font-size:11px;color:var(--text3);margin-bottom:24px;padding-left:2px"></div>
 
   <!-- ③ 資金效率 -->
   <div class="sec mb18">資金效率</div>
   <div class="eff-row mb24">
     <div class="eff-card">
       <div class="eff-l">年化總報酬率（股利＋利得）</div>
-      <div class="eff-v" style="color:var(--green)">+4.11%</div>
-      <div class="bar-wrap"><div class="bar" style="width:82%;background:var(--green)"></div></div>
-      <div class="eff-n">
-        殖利率 4.29%，帳損 −0.18%<br>
-        <span style="color:var(--text3)">除息填息後可回升至約 4.29%</span>
-      </div>
+      <div class="eff-v" id="eff-ret" style="color:var(--green)">—</div>
+      <div class="bar-wrap"><div class="bar" id="eff-ret-bar" style="background:var(--green)"></div></div>
+      <div class="eff-n" id="eff-ret-note"></div>
     </div>
     <div class="eff-card">
       <div class="eff-l">每月穩定股利收入（預估）</div>
       <div class="eff-v" style="color:var(--blue)">$71.5 萬</div>
       <div class="bar-wrap"><div class="bar" style="width:68%;background:var(--blue)"></div></div>
-      <div class="eff-n">
-        全年 $8.58M ÷ 12 個月<br>
-        <span style="color:var(--text3)">7–9 月除息，下半年集中入帳</span>
-      </div>
+      <div class="eff-n">全年 $8.58M ÷ 12 個月<br><span style="color:var(--text3)">7–9 月除息，下半年集中入帳</span></div>
     </div>
   </div>
 
-  <!-- ④ 持股明細 -->
+  <!-- ④ 輸入收盤價 -->
+  <div class="sec mb18">
+    更新收盤價
+    <span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">輸入最新收盤價，所有數字即時更新</span>
+  </div>
+  <div class="input-panel mb24">
+    <div class="input-panel-head">
+      <span class="input-panel-title">各檔收盤價</span>
+      <button class="reset-btn" id="resetBtn">還原預設</button>
+    </div>
+    <div class="input-grid" id="input-grid"></div>
+  </div>
+
+  <!-- ⑤ 持股明細 -->
   <div class="sec mb18">持股明細　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">點擊欄位排序</span></div>
   <div class="tbl-wrap mb24">
     <table>
@@ -212,7 +240,7 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
         <th data-col="name" style="text-align:left">代碼</th>
         <th data-col="shares">股數</th>
         <th data-col="avgCost">均價</th>
-        <th data-col="close">5/29 收盤</th>
+        <th data-col="close">收盤</th>
         <th data-col="gain">利得（千）</th>
         <th data-col="gainPct">利得率</th>
         <th data-col="divY">殖利率</th>
@@ -223,7 +251,7 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
     </table>
   </div>
 
-  <!-- ⑤ 除息日 -->
+  <!-- ⑥ 除息日 -->
   <div class="sec mb18">除息日</div>
   <div class="div-row mb24">
     <div class="dc" style="border-color:#9FE1CB;background:var(--green-lt)">
@@ -258,133 +286,166 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
     </div>
   </div>
 
-  <!-- ⑥ 建議操作 -->
+  <!-- ⑦ 建議操作 -->
   <div class="sec mb18">建議操作</div>
   <div class="ac-grid">
     <div class="ac">
-      <div class="ac-head">
-        <div class="ac-icon" style="background:var(--blue-lt)">⚖</div>
-        <span class="ac-title">調整比重</span>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--red)"></div>
-        <div>
-          <div class="ac-name">中信丙特 <span class="ac-tag">減碼</span></div>
-          <div class="ac-note">殖利率僅 3.09%，低於均值 1.2%，建議降至 1.5% 以下</div>
-        </div>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--amber)"></div>
-        <div>
-          <div class="ac-name">國泰乙特 <span class="ac-tag">觀察</span></div>
-          <div class="ac-note">殖利率 3.75%，除息後視填息狀況再決定</div>
-        </div>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--green)"></div>
-        <div>
-          <div class="ac-name">聯邦銀甲特 <span class="ac-tag">可加碼</span></div>
-          <div class="ac-note">殖利率最高 4.82%，帳損輕微，回檔可加</div>
-        </div>
-      </div>
+      <div class="ac-head"><div class="ac-icon" style="background:var(--blue-lt)">⚖</div><span class="ac-title">調整比重</span></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">中信丙特 <span class="ac-tag">減碼</span></div><div class="ac-note">殖利率僅 3.09%，低於均值 1.2%，建議降至 1.5% 以下</div></div></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--amber)"></div><div><div class="ac-name">國泰乙特 <span class="ac-tag">觀察</span></div><div class="ac-note">殖利率 3.75%，除息後視填息狀況再決定</div></div></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">聯邦銀甲特 <span class="ac-tag">可加碼</span></div><div class="ac-note">殖利率最高 4.82%，帳損輕微，回檔可加</div></div></div>
     </div>
-
     <div class="ac">
-      <div class="ac-head">
-        <div class="ac-icon" style="background:var(--green-lt)">📅</div>
-        <span class="ac-title">除息前後時機</span>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--red)"></div>
-        <div>
-          <div class="ac-name">台泥乙特 <span class="ac-tag" style="color:var(--green-dk)">7/11 確認</span></div>
-          <div class="ac-note">帳損 −182K，除息前勿賣，領息後追蹤填息進度</div>
-        </div>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--amber)"></div>
-        <div>
-          <div class="ac-name">台新戊特 / 聯邦銀 <span class="ac-tag" style="color:var(--amber)">7 月預估</span></div>
-          <div class="ac-note">帳損除息後可大幅彌補，除息前維持持倉</div>
-        </div>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--text3)"></div>
-        <div>
-          <div class="ac-name">和潤 / 裕融 <span class="ac-tag">9 月預估</span></div>
-          <div class="ac-note">9 月前持有，除息後視報酬決定去留</div>
-        </div>
-      </div>
+      <div class="ac-head"><div class="ac-icon" style="background:var(--green-lt)">📅</div><span class="ac-title">除息前後時機</span></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag" style="color:var(--green-dk)">7/11 確認</span></div><div class="ac-note">帳損 −182K，除息前勿賣，領息後追蹤填息進度</div></div></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--amber)"></div><div><div class="ac-name">台新戊特 / 聯邦銀 <span class="ac-tag" style="color:var(--amber)">7 月預估</span></div><div class="ac-note">帳損除息後可大幅彌補，除息前維持持倉</div></div></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">和潤 / 裕融 <span class="ac-tag">9 月預估</span></div><div class="ac-note">9 月前持有，除息後視報酬決定去留</div></div></div>
     </div>
-
     <div class="ac">
-      <div class="ac-head">
-        <div class="ac-icon" style="background:var(--amber-lt)">🛡</div>
-        <span class="ac-title">停損 / 停利</span>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--red)"></div>
-        <div>
-          <div class="ac-name">台泥乙特 <span class="ac-tag">停損 $41.5</span></div>
-          <div class="ac-note">現價 $45.3，距停損尚有 8.4%，除息前安全</div>
-        </div>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--green)"></div>
-        <div>
-          <div class="ac-name">中信乙特 <span class="ac-tag">停利 $65.8</span></div>
-          <div class="ac-note">現價 $64.5，距停利僅 $1.3，可備限價單</div>
-        </div>
-      </div>
-      <div class="ac-row">
-        <div class="ac-dot" style="background:var(--green)"></div>
-        <div>
-          <div class="ac-name">富邦乙特 <span class="ac-tag">停利 $64.3</span></div>
-          <div class="ac-note">現價 $62.7，帳利最大 +150K，持續關注</div>
-        </div>
-      </div>
+      <div class="ac-head"><div class="ac-icon" style="background:var(--amber-lt)">🛡</div><span class="ac-title">停損 / 停利</span></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag">停損 $41.5</span></div><div class="ac-note">距停損尚有 8.4%，除息前安全</div></div></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">中信乙特 <span class="ac-tag">停利 $65.8</span></div><div class="ac-note">現價距停利僅 $1.3，可備限價單</div></div></div>
+      <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">富邦乙特 <span class="ac-tag">停利 $64.3</span></div><div class="ac-note">帳利最大 +150K，持續關注</div></div></div>
     </div>
   </div>
 
-  <footer>特別股投資報告　2026-05-29　機密文件，僅供公司內部使用</footer>
+  <footer>特別股投資報告　公司內部使用</footer>
 </div>
 
 <script>
-const S=[
-  {code:"2891B",name:"中信乙特",  shares:79000,  cost:5047609,  close:64.5,divY:0.04376,  exDiv:"2026-08 預估",conf:false},
-  {code:"2891C",name:"中信丙特",  shares:111000, cost:6890349,  close:62.5,divY:0.03093,  exDiv:"2026-08 預估",conf:false},
-  {code:"2881A",name:"富邦甲特",  shares:145000, cost:9252098,  close:63.8,divY:0.043079, exDiv:"2026-08 預估",conf:false},
-  {code:"2881B",name:"富邦乙特",  shares:547000, cost:34147320, close:62.7,divY:0.041207, exDiv:"2026-08 預估",conf:false},
-  {code:"2882A",name:"國泰甲特",  shares:496000, cost:30746080, close:61.9,divY:0.04075,  exDiv:"2026-08 預估",conf:false},
-  {code:"2882B",name:"國泰乙特",  shares:245000, cost:14888474, close:60.8,divY:0.03753,  exDiv:"2026-08 預估",conf:false},
-  {code:"1101B",name:"台泥乙特",  shares:762000, cost:34700746, close:45.3,divY:0.044495, exDiv:"2026-07-11 ✓",conf:true},
-  {code:"2838A",name:"聯邦銀甲特",shares:92000,  cost:5017517,  close:54.3,divY:0.048235, exDiv:"2026-07 預估",conf:false},
-  {code:"2887E",name:"台新戊特",  shares:504000, cost:25759358, close:50.9,divY:0.047667, exDiv:"2026-07 預估",conf:false},
-  {code:"6592A",name:"和潤甲特",  shares:98000,  cost:9549074,  close:96.8,divY:0.043104, exDiv:"2026-09 預估",conf:false},
-  {code:"6592B",name:"和潤乙特",  shares:140000, cost:13695361, close:97.0,divY:0.046001, exDiv:"2026-09 預估",conf:false},
-  {code:"9941A",name:"裕融甲特",  shares:203000, cost:10287312, close:50.3,divY:0.046163, exDiv:"2026-09 預估",conf:false},
-].map(s=>({...s,
-  avgCost:s.cost/s.shares,
-  gain:s.close*s.shares-s.cost,
-  gainPct:(s.close*s.shares-s.cost)/s.cost,
-  annDiv:s.cost*s.divY,
-}));
+const BASE=[
+  {code:"2891B",name:"中信乙特",  shares:79000,  cost:5047609,  divY:0.04376,  exDiv:"2026-08 預估",conf:false, c430:64.6,c529:64.5},
+  {code:"2891C",name:"中信丙特",  shares:111000, cost:6890349,  divY:0.03093,  exDiv:"2026-08 預估",conf:false, c430:62.2,c529:62.5},
+  {code:"2881A",name:"富邦甲特",  shares:145000, cost:9252098,  divY:0.043079, exDiv:"2026-08 預估",conf:false, c430:64.4,c529:63.8},
+  {code:"2881B",name:"富邦乙特",  shares:547000, cost:34147320, divY:0.041207, exDiv:"2026-08 預估",conf:false, c430:62.6,c529:62.7},
+  {code:"2882A",name:"國泰甲特",  shares:496000, cost:30746080, divY:0.04075,  exDiv:"2026-08 預估",conf:false, c430:62.3,c529:61.9},
+  {code:"2882B",name:"國泰乙特",  shares:245000, cost:14888474, divY:0.03753,  exDiv:"2026-08 預估",conf:false, c430:60.9,c529:60.8},
+  {code:"1101B",name:"台泥乙特",  shares:762000, cost:34700746, divY:0.044495, exDiv:"2026-07-11 ✓",conf:true,  c430:45.4,c529:45.3},
+  {code:"2838A",name:"聯邦銀甲特",shares:92000,  cost:5017517,  divY:0.048235, exDiv:"2026-07 預估",conf:false, c430:54.8,c529:54.3},
+  {code:"2887E",name:"台新戊特",  shares:504000, cost:25759358, divY:0.047667, exDiv:"2026-07 預估",conf:false, c430:51.5,c529:50.9},
+  {code:"6592A",name:"和潤甲特",  shares:98000,  cost:9549074,  divY:0.043104, exDiv:"2026-09 預估",conf:false, c430:97.3,c529:96.8},
+  {code:"6592B",name:"和潤乙特",  shares:140000, cost:13695361, divY:0.046001, exDiv:"2026-09 預估",conf:false, c430:97.5,c529:97.0},
+  {code:"9941A",name:"裕融甲特",  shares:203000, cost:10287312, divY:0.046163, exDiv:"2026-09 預估",conf:false, c430:50.7,c529:50.3},
+];
 
-const tc=S.reduce((a,s)=>a+s.cost,0);
-const tg=S.reduce((a,s)=>a+s.gain,0);
-const td=S.reduce((a,s)=>a+s.annDiv,0);
-const ts=S.reduce((a,s)=>a+s.shares,0);
+const TOTAL_COST = BASE.reduce((a,s)=>a+s.cost,0);
+const TOTAL_DIV  = BASE.reduce((a,s)=>a+s.cost*s.divY,0);
+const AVG_YIELD  = TOTAL_DIV/TOTAL_COST;
+
+// current prices (editable)
+const prices = BASE.map(s=>s.c529);
+let prevMode = '430'; // which period to compare
+
 const sgn=n=>n>=0?'+':'';
 const pct=n=>sgn(n)+(n*100).toFixed(2)+'%';
 const fmtN=n=>Math.round(n).toLocaleString('zh-TW');
 const fmtM=n=>(n/1e6).toFixed(2)+'M';
+const fmtK=n=>sgn(n)+Math.round(Math.abs(n)/1000).toLocaleString('zh-TW')+'K';
 
-let sc='gainPct',sd=-1;
-function render(){
+function compute(){
+  return BASE.map((s,i)=>({
+    ...s,
+    close:   prices[i],
+    avgCost: s.cost/s.shares,
+    gain:    prices[i]*s.shares - s.cost,
+    gainPct: (prices[i]*s.shares - s.cost)/s.cost,
+    annDiv:  s.cost*s.divY,
+  }));
+}
+
+function update(){
+  const S = compute();
+  const totalMkt  = S.reduce((a,s)=>a+s.close*s.shares,0);
+  const totalGain = S.reduce((a,s)=>a+s.gain,0);
+  const totalRet  = totalGain/TOTAL_COST + AVG_YIELD;
+  const totalShares = S.reduce((a,s)=>a+s.shares,0);
+
+  // KPI
+  document.getElementById('kpi-mkt').textContent = '$'+(totalMkt/1e8).toFixed(3)+'億';
+  const gEl=document.getElementById('kpi-gain');
+  gEl.textContent=(totalGain>=0?'+':'')+fmtM(totalGain);
+  gEl.style.color=totalGain>=0?'var(--green)':'var(--red)';
+  document.getElementById('kpi-gain-pct').textContent=pct(totalGain/TOTAL_COST);
+  document.getElementById('kpi-ret').textContent=pct(totalRet);
+  document.getElementById('kpi-ret-sub').textContent='殖利率 '+pct(AVG_YIELD)+' '+sgn(totalGain/TOTAL_COST)+pct(totalGain/TOTAL_COST).replace('+','').replace(sgn(totalGain/TOTAL_COST),'').trim()+' 利得';
+
+  // Efficiency
+  document.getElementById('eff-ret').textContent=pct(totalRet);
+  document.getElementById('eff-ret').style.color=totalRet>=0?'var(--green)':'var(--red)';
+  document.getElementById('eff-ret-bar').style.width=Math.max(0,Math.min(100,totalRet/0.06*100)).toFixed(0)+'%';
+  document.getElementById('eff-ret-note').innerHTML=`殖利率 ${pct(AVG_YIELD)}，帳${totalGain>=0?'利':'損'} ${pct(totalGain/TOTAL_COST)}<br><span style="color:var(--text3)">除息填息後可回升至約 ${pct(AVG_YIELD)}</span>`;
+
+  // MoM
+  const prevPrices = prevMode==='430' ? BASE.map(s=>s.c430) : BASE.map(s=>s.c529);
+  const prevLabel  = prevMode==='430' ? '4/30 收盤　帳面利得' : '5/29 收盤　帳面利得';
+  const prevGain   = BASE.reduce((a,s,i)=>a+(prevPrices[i]*s.shares-s.cost),0);
+  const delta      = totalGain - prevGain;
+
+  document.getElementById('mom-prev-label').textContent=prevLabel;
+  const pvEl=document.getElementById('mom-prev-val');
+  pvEl.textContent=(prevGain>=0?'+':'')+fmtM(prevGain);
+  pvEl.style.color=prevGain>=0?'var(--green)':'var(--red)';
+  document.getElementById('mom-prev-pct').textContent='佔投入 '+pct(prevGain/TOTAL_COST);
+
+  document.getElementById('mom-curr-label').textContent='目前收盤　帳面利得';
+  const cvEl=document.getElementById('mom-curr-val');
+  cvEl.textContent=(totalGain>=0?'+':'')+fmtM(totalGain);
+  cvEl.style.color=totalGain>=0?'var(--green)':'var(--red)';
+  document.getElementById('mom-curr-pct').textContent='佔投入 '+pct(totalGain/TOTAL_COST);
+
+  const dEl=document.getElementById('mom-delta');
+  dEl.textContent=(delta>=0?'+':'')+fmtM(delta);
+  dEl.style.color=delta>=0?'var(--green)':'var(--red)';
+  document.getElementById('mom-pill').innerHTML=`<span class="pill ${delta>=0?'pill-up':'pill-dn'}">${delta>=0?'↑ 改善':'↓ 擴大'}</span>`;
+  document.getElementById('mom-note').textContent=delta<0
+    ?`主因：部分大部位收盤價下滑，拉大帳損。股利收益不受影響。`
+    :delta>0?`整體帳面利得較前期改善，市場行情回升。`:`與前期相比變化不大。`;
+
+  // Input grid — update change indicators
+  BASE.forEach((s,i)=>{
+    const chgEl=document.getElementById('chg-'+i);
+    if(!chgEl) return;
+    const chg=prices[i]-s.c529;
+    chgEl.textContent=chg===0?'—':(chg>0?'+':'')+chg.toFixed(2);
+    chgEl.style.color=chg>0?'var(--green)':chg<0?'var(--red)':'var(--text3)';
+  });
+
+  // Table
+  renderTable(S, totalGain, totalShares);
+}
+
+// Input grid
+function buildInputGrid(){
+  const grid=document.getElementById('input-grid');
+  grid.innerHTML=BASE.map((s,i)=>`
+    <div class="input-item">
+      <div class="input-label">
+        <span>${s.name}</span>
+        <span class="input-code">${s.code}</span>
+      </div>
+      <div class="input-wrap">
+        <input class="price-input" type="number" step="0.1" min="0" id="inp-${i}" value="${prices[i].toFixed(2)}">
+        <span class="input-chg" id="chg-${i}" style="color:var(--text3)">—</span>
+      </div>
+    </div>`).join('');
+
+  BASE.forEach((_,i)=>{
+    document.getElementById('inp-'+i).addEventListener('input',function(){
+      const v=parseFloat(this.value);
+      if(!isNaN(v)&&v>0){ prices[i]=v; update(); }
+    });
+  });
+}
+
+// Table
+let sc='gainPct', sd=-1;
+function renderTable(S, totalGain, totalShares){
   const rows=[...S].sort((a,b)=>typeof a[sc]==='string'?sd*a[sc].localeCompare(b[sc]):sd*(a[sc]-b[sc]));
+  const tc=TOTAL_COST;
+  const td=TOTAL_DIV;
   document.getElementById('tbody').innerHTML=
     rows.map(s=>`<tr>
-      <td><span style="font-weight:500">${s.name}</span>&nbsp;<span style="font-size:10px;color:#94A3B8">${s.code}</span></td>
+      <td style="font-family:var(--font)"><span style="font-weight:500">${s.name}</span>&nbsp;<span style="font-size:10px;color:#94A3B8">${s.code}</span></td>
       <td>${fmtN(s.shares)}</td>
       <td>$${s.avgCost.toFixed(2)}</td>
       <td>$${s.close.toFixed(2)}</td>
@@ -395,10 +456,10 @@ function render(){
       <td style="font-family:var(--font)"><span class="bdg ${s.conf?'bdg-conf':'bdg-est'}">${s.exDiv}</span></td>
     </tr>`).join('')+
     `<tr class="tr-total">
-      <td>合計</td>
-      <td>${fmtN(ts)}</td><td>—</td><td>—</td>
-      <td class="${tg>=0?'pos':'neg'}" style="font-weight:500">${sgn(tg)}${fmtN(Math.round(tg/1000))}</td>
-      <td class="${tg>=0?'pos':'neg'}">${pct(tg/tc)}</td>
+      <td style="font-family:var(--font)">合計</td>
+      <td>${fmtN(totalShares)}</td><td>—</td><td>—</td>
+      <td class="${totalGain>=0?'pos':'neg'}" style="font-weight:500">${sgn(totalGain)}${fmtN(Math.round(totalGain/1000))}</td>
+      <td class="${totalGain>=0?'pos':'neg'}">${pct(totalGain/tc)}</td>
       <td style="color:#0F7EA6">${pct(td/tc)}</td>
       <td>$${fmtM(td)}</td><td>—</td>
     </tr>`;
@@ -407,12 +468,33 @@ function render(){
     if(th.dataset.col===sc) th.classList.add(sd===1?'sa':'sd');
   });
 }
-render();
 document.querySelectorAll('thead th[data-col]').forEach(th=>th.addEventListener('click',()=>{
   const c=th.dataset.col;
   if(sc===c) sd*=-1; else{sc=c;sd=-1;}
-  render();
+  update();
 }));
+
+// Month tabs
+document.querySelectorAll('.mtab').forEach(btn=>btn.addEventListener('click',function(){
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  this.classList.add('active');
+  prevMode=this.dataset.prev;
+  update();
+}));
+
+// Reset
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  BASE.forEach((s,i)=>{
+    prices[i]=s.c529;
+    const inp=document.getElementById('inp-'+i);
+    if(inp) inp.value=s.c529.toFixed(2);
+  });
+  update();
+});
+
+// Init
+buildInputGrid();
+update();
 </script>
 </body>
 </html>
