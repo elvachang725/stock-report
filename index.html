@@ -131,10 +131,19 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
     </div>
   </div>
 
-  <div class="sec mb18">月對月比較　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">以現有持股套入各期收盤價計算</span></div>
-  <div class="month-tabs">
-    <button class="mtab active" data-prev="430">對比 4/30</button>
-    <button class="mtab" data-prev="529">對比 5/29</button>
+  <div class="sec mb18">歷史利得查詢　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">選擇日期查看當天帳面利得</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <label style="font-size:14px;color:var(--text2)">查詢日期</label>
+      <select id="date-select" style="padding:7px 12px;border:.5px solid var(--border2);border-radius:7px;font-size:15px;font-family:var(--font);color:var(--text);background:var(--surface);cursor:pointer;outline:none">
+        <option value="">— 載入中 —</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="mtab active" data-prev="sel">對比選取日</button>
+      <button class="mtab" data-prev="430">對比 4/30</button>
+      <button class="mtab" data-prev="529">對比 5/29</button>
+    </div>
   </div>
   <div class="mom-row" style="margin-bottom:8px">
     <div class="mom-card"><div class="mom-l" id="mom-prev-label">4/30　帳面利得</div><div class="mom-v" id="mom-prev-val">—</div><div class="mom-s" id="mom-prev-pct"></div></div>
@@ -218,6 +227,8 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbzWk2Fw0s3tdd1H2vWoGEQBGZHMQkvNhYpuFHuemEYPwKvhEnoXSKxgh8D6xPLLb-xEsA/exec';
+let historyData = []; // [{date, '2891B':64.2, ...}]
+let selectedDatePrices = null;
 
 const BASE=[
   {code:"2891B",name:"中信乙特",  shares:79000,  cost:5047609,  divY:0.04376,  exDiv:"2026-08 預估",conf:false, c430:64.6, c529:64.5},
@@ -246,6 +257,41 @@ const sgn=n=>n>=0?'+':'';
 const pct=n=>sgn(n)+(n*100).toFixed(2)+'%';
 const fmtN=n=>Math.round(n).toLocaleString('zh-TW');
 const fmtM=n=>(n/1e6).toFixed(2)+'M';
+
+async function fetchHistory(){
+  try {
+    const res = await fetch(API_URL+'?mode=history');
+    if(!res.ok) throw new Error();
+    historyData = await res.json();
+    // populate date selector
+    const sel = document.getElementById('date-select');
+    sel.innerHTML = '<option value="">— 選擇日期 —</option>';
+    // show latest 60 days, newest first
+    const recent = [...historyData].reverse().slice(0,60);
+    recent.forEach(row=>{
+      const opt = document.createElement('option');
+      opt.value = row.date;
+      opt.textContent = row.date;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', function(){
+      const d = this.value;
+      if(!d){ selectedDatePrices=null; return; }
+      const row = historyData.find(r=>r.date===d);
+      if(row){
+        selectedDatePrices = BASE.map(s=>{
+          const code = s.code;
+          return row[code] ? parseFloat(row[code]) : s.c529;
+        });
+        // activate "對比選取日" tab
+        document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+        document.querySelector('.mtab[data-prev="sel"]').classList.add('active');
+        prevMode='sel';
+        update();
+      }
+    });
+  } catch(e){ console.log('history fetch failed', e); }
+}
 
 async function fetchPrices(){
   try {
@@ -306,8 +352,18 @@ function update(){
   gp2.textContent=pct(totalGain/TOTAL_COST);
   gp2.style.color=totalGain>=0?'var(--green)':'var(--red)';
 
-  const prevPrices=prevMode==='430'?BASE.map(s=>s.c430):BASE.map(s=>s.c529);
-  const prevLabel=prevMode==='430'?'4/30 收盤　帳面利得':'5/29 收盤　帳面利得';
+  let prevPrices, prevLabel;
+  if(prevMode==='sel' && selectedDatePrices){
+    prevPrices = selectedDatePrices;
+    const selDate = document.getElementById('date-select').value;
+    prevLabel = selDate+'　帳面利得';
+  } else if(prevMode==='430'){
+    prevPrices = BASE.map(s=>s.c430);
+    prevLabel = '4/30 收盤　帳面利得';
+  } else {
+    prevPrices = BASE.map(s=>s.c529);
+    prevLabel = '5/29 收盤　帳面利得';
+  }
   const prevGain=BASE.reduce((a,s,i)=>a+(prevPrices[i]*s.shares-s.cost),0);
   const delta=totalGain-prevGain;
 
@@ -366,9 +422,13 @@ document.querySelectorAll('thead th[data-col]').forEach(th=>th.addEventListener(
 }));
 document.querySelectorAll('.mtab').forEach(btn=>btn.addEventListener('click',function(){
   document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
-  this.classList.add('active');prevMode=this.dataset.prev;update();
+  this.classList.add('active');
+  prevMode=this.dataset.prev;
+  if(prevMode!=='sel') selectedDatePrices=null;
+  update();
 }));
 
+fetchHistory();
 fetchPrices();
 setInterval(fetchPrices, 5*60*1000);
 </script>
