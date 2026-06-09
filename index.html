@@ -387,7 +387,26 @@ function update(){
   document.getElementById('eff-ret-bar').style.width=Math.max(0,Math.min(100,totalRet/0.06*100)).toFixed(0)+'%';
   document.getElementById('eff-ret-note').innerHTML=`殖利率 ${pct(AVG_YIELD)}，帳${totalGain>=0?'利':'損'} ${pct(totalGain/TOTAL_COST)}<br><span style="color:var(--text3)">除息填息後可回升至約 ${pct(AVG_YIELD)}</span>`;
 
-  renderTable(S,totalGain,totalShares);
+  // If viewing selected date, show that date's prices in table
+  if(prevMode==='sel' && selectedDatePrices){
+    const Ssel=BASE.map((s,i)=>({
+      ...s,
+      close:selectedDatePrices[i],
+      avgCost:s.cost/s.shares,
+      gain:selectedDatePrices[i]*s.shares-s.cost,
+      gainPct:(selectedDatePrices[i]*s.shares-s.cost)/s.cost,
+      annDiv:s.cost*s.divY,
+    }));
+    const tgSel=Ssel.reduce((a,s)=>a+s.gain,0);
+    const tsSel=Ssel.reduce((a,s)=>a+s.shares,0);
+    // update table header to show selected date
+    document.querySelector('thead th[data-col="close"]').textContent=
+      document.getElementById('date-select').value+' 收盤';
+    renderTable(Ssel,tgSel,tsSel);
+  } else {
+    document.querySelector('thead th[data-col="close"]').textContent='收盤';
+    renderTable(S,totalGain,totalShares);
+  }
 }
 
 let sc='gainPct',sd=-1;
@@ -424,7 +443,10 @@ document.querySelectorAll('.mtab').forEach(btn=>btn.addEventListener('click',fun
   document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
   this.classList.add('active');
   prevMode=this.dataset.prev;
-  if(prevMode!=='sel') selectedDatePrices=null;
+  if(prevMode!=='sel'){
+    selectedDatePrices=null;
+    document.querySelector('thead th[data-col="close"]').textContent='收盤';
+  }
   update();
 }));
 
