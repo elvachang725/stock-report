@@ -270,57 +270,56 @@ async function fetchExDivData(){
 function renderExDiv(){
   const row = document.getElementById('exdiv-row');
   if(!row) return;
-  
-  // Group by month
+
+  // Default exdiv info if not loaded yet
+  const defaultInfo = {
+    '2891B':{date:'2026-08 預估',confirmed:false,divAmount:''},
+    '2891C':{date:'2026-08 預估',confirmed:false,divAmount:''},
+    '2881A':{date:'2026-08 預估',confirmed:false,divAmount:''},
+    '2881B':{date:'2026-08 預估',confirmed:false,divAmount:''},
+    '2882A':{date:'2026-08 預估',confirmed:false,divAmount:''},
+    '2882B':{date:'2026-08 預估',confirmed:false,divAmount:''},
+    '1101B':{date:'2026-07-11',confirmed:true,divAmount:'2.02'},
+    '2838A':{date:'2026-07 預估',confirmed:false,divAmount:''},
+    '2887E':{date:'2026-07 預估',confirmed:false,divAmount:''},
+    '6592A':{date:'2026-09 預估',confirmed:false,divAmount:''},
+    '6592B':{date:'2026-09 預估',confirmed:false,divAmount:''},
+    '9941A':{date:'2026-09 預估',confirmed:false,divAmount:''},
+  };
+
+  // Merge with loaded data
+  const merged = {};
+  BASE.forEach(s=>{ merged[s.code] = exDivData[s.code] || defaultInfo[s.code] || {date:'預估',confirmed:false,divAmount:''}; });
+
+  // Group by month/date for display
   const groups = {};
   BASE.forEach(s=>{
-    const info = exDivData[s.code];
-    const date = info ? info.date : '';
-    const confirmed = info ? info.confirmed : false;
-    const divAmt = info ? info.divAmount : '';
-    
-    // extract month key
-    let monthKey = '';
-    if(date.match(/^\d{4}-\d{2}-\d{2}$/)){
-      monthKey = date.substring(0,7);
-    } else {
-      monthKey = date.replace(' 預估','').trim();
-    }
-    
-    if(!groups[monthKey]) groups[monthKey] = [];
-    groups[monthKey].push({code:s.code, name:s.name||STOCK_NAMES[s.code], date, confirmed, divAmt, cost:s.cost, divY:s.divY});
+    const info = merged[s.code];
+    const date = info.date || '';
+    let key = date.match(/^\d{4}-\d{2}-\d{2}$/) ? date.substring(0,7) : date.replace(' 預估','').trim();
+    if(!groups[key]) groups[key]={stocks:[],hasConfirmed:false};
+    groups[key].stocks.push({...s, ...info, name:STOCK_NAMES[s.code]});
+    if(info.confirmed) groups[key].hasConfirmed=true;
   });
 
   const sortedKeys = Object.keys(groups).sort();
-  
+
   row.innerHTML = sortedKeys.map(key=>{
-    const stocks = groups[key];
-    const hasConfirmed = stocks.some(s=>s.confirmed);
-    const borderColor = hasConfirmed ? '#9FE1CB' : 'var(--border)';
-    const bg = hasConfirmed ? 'var(--green-lt)' : 'var(--surface)';
-    const tagColor = hasConfirmed ? 'var(--green-dk)' : 'var(--amber-dk)';
-    const dateColor = hasConfirmed ? 'var(--green-dk)' : 'var(--amber)';
-    const nameColor = hasConfirmed ? 'var(--green-xdk)' : 'var(--text)';
-    const tagText = hasConfirmed ? '已確認' : key.includes('預估')?key:'預估';
-    
-    // show first confirmed date or month
-    const confirmedStock = stocks.find(s=>s.confirmed);
-    const displayDate = confirmedStock ? confirmedStock.date : key;
-    
-    // total annual div for this group
-    const totalDiv = stocks.reduce((a,s)=>a+s.cost*s.divY,0);
-    const divLine = confirmedStock && confirmedStock.divAmt 
-      ? `每股 $${confirmedStock.divAmt}　共 ~$${(totalDiv/1e6).toFixed(2)}M`
-      : `合計 ~$${(totalDiv/1e6).toFixed(2)}M`;
-    
-    const nameText = stocks.length===1 ? stocks[0].name||STOCK_NAMES[stocks[0].code] 
-      : stocks.map(s=>s.name||STOCK_NAMES[s.code]).join(' / ');
-    
-    return `<div class="dc" style="border-color:${borderColor};background:${bg}">
-      <div class="dc-tag" style="color:${tagColor}">${tagText}</div>
-      <div class="dc-name" style="color:${nameColor}">${nameText}</div>
-      <div class="dc-date" style="color:${dateColor}">${displayDate}</div>
-      <div class="dc-amt" style="color:${nameColor}">${divLine}</div>
+    const g = groups[key];
+    const conf = g.hasConfirmed;
+    const confirmedStock = g.stocks.find(s=>s.confirmed);
+    const totalDiv = g.stocks.reduce((a,s)=>a+s.cost*s.divY,0);
+    const displayDate = confirmedStock ? confirmedStock.date : key+(key.match(/^\d{4}-\d{2}$/)?'':' 預估');
+    const nameText = g.stocks.length===1 ? g.stocks[0].name : g.stocks.map(s=>s.name).join(' / ');
+    const divLine = confirmedStock && confirmedStock.divAmount
+      ? `每股 $${confirmedStock.divAmount}　共 ~$${(totalDiv/1e6).toFixed(2)}M`
+      : (g.stocks.length===1 ? `~$${(totalDiv/1e6).toFixed(2)}M` : `${g.stocks.length} 檔合計 ~$${(totalDiv/1e6).toFixed(2)}M`);
+
+    return `<div class="dc" style="border-color:${conf?'#9FE1CB':'var(--border)'};background:${conf?'var(--green-lt)':'var(--surface)'}">
+      <div class="dc-tag" style="color:${conf?'var(--green-dk)':'var(--amber-dk)'}">${conf?'已確認':'預估'}</div>
+      <div class="dc-name" style="color:${conf?'var(--green-xdk)':'var(--text)'}">${nameText}</div>
+      <div class="dc-date" style="color:${conf?'var(--green-dk)':'var(--amber)'}">${displayDate}</div>
+      <div class="dc-amt" style="color:${conf?'var(--green-xdk)':'var(--text2)'}">${divLine}</div>
     </div>`;
   }).join('');
 }
