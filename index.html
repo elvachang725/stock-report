@@ -186,18 +186,9 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
     </table>
   </div>
 
-  <div class="sec mb18">除息日</div>
-  <div class="div-row mb24">
-    <div class="dc" style="border-color:#9FE1CB;background:var(--green-lt)">
-      <div class="dc-tag" style="color:var(--green-dk)">已確認</div>
-      <div class="dc-name" style="color:var(--green-xdk)">台泥乙特</div>
-      <div class="dc-date" style="color:var(--green-dk)">2026-07-11</div>
-      <div class="dc-amt" style="color:var(--green-xdk)">每股 ~$2.02　共 ~$1.54M</div>
-    </div>
-    <div class="dc"><div class="dc-tag" style="color:var(--amber-dk)">7 月預估</div><div class="dc-name">聯邦銀甲特</div><div class="dc-date" style="color:var(--amber)">2026-07</div><div class="dc-amt">~$0.24M</div></div>
-    <div class="dc"><div class="dc-tag" style="color:var(--amber-dk)">7 月預估</div><div class="dc-name">台新戊特</div><div class="dc-date" style="color:var(--amber)">2026-07</div><div class="dc-amt">~$1.23M</div></div>
-    <div class="dc"><div class="dc-tag" style="color:var(--amber-dk)">8 月預估</div><div class="dc-name">中信 / 富邦 / 國泰</div><div class="dc-date" style="color:var(--amber)">2026-08</div><div class="dc-amt">六檔合計 ~$4.22M</div></div>
-    <div class="dc"><div class="dc-tag" style="color:var(--amber-dk)">9 月預估</div><div class="dc-name">和潤 / 裕融</div><div class="dc-date" style="color:var(--amber)">2026-09</div><div class="dc-amt">三檔合計 ~$1.52M</div></div>
+  <div class="sec mb18">除息日　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">資料來源：Google Sheets，有新確認日期時請更新試算表</span></div>
+  <div class="div-row mb24" id="exdiv-row">
+    <div class="dc" style="color:var(--text3);font-size:13px;padding:14px">載入中...</div>
   </div>
 
   <div class="sec mb18">建議操作</div>
@@ -227,8 +218,15 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbzWk2Fw0s3tdd1H2vWoGEQBGZHMQkvNhYpuFHuemEYPwKvhEnoXSKxgh8D6xPLLb-xEsA/exec';
-let historyData = []; // [{date, '2891B':64.2, ...}]
+let historyData = [];
 let selectedDatePrices = null;
+let exDivData = {};
+
+const STOCK_NAMES = {
+  '2891B':'中信乙特','2891C':'中信丙特','2881A':'富邦甲特','2881B':'富邦乙特',
+  '2882A':'國泰甲特','2882B':'國泰乙特','1101B':'台泥乙特','2838A':'聯邦銀甲特',
+  '2887E':'台新戊特','6592A':'和潤甲特','6592B':'和潤乙特','9941A':'裕融甲特'
+};
 
 const BASE=[
   {code:"2891B",name:"中信乙特",  shares:79000,  cost:5047609,  divY:0.04376,  exDiv:"2026-08 預估",conf:false, c430:64.6, c529:64.5},
@@ -257,6 +255,75 @@ const sgn=n=>n>=0?'+':'';
 const pct=n=>sgn(n)+(n*100).toFixed(2)+'%';
 const fmtN=n=>Math.round(n).toLocaleString('zh-TW');
 const fmtM=n=>(n/1e6).toFixed(2)+'M';
+
+async function fetchExDivData(){
+  try {
+    const res = await fetch(API_URL+'?mode=exdiv');
+    if(!res.ok) throw new Error();
+    exDivData = await res.json();
+    renderExDiv();
+  } catch(e){ 
+    renderExDiv(); // use defaults
+  }
+}
+
+function renderExDiv(){
+  const row = document.getElementById('exdiv-row');
+  if(!row) return;
+  
+  // Group by month
+  const groups = {};
+  BASE.forEach(s=>{
+    const info = exDivData[s.code];
+    const date = info ? info.date : '';
+    const confirmed = info ? info.confirmed : false;
+    const divAmt = info ? info.divAmount : '';
+    
+    // extract month key
+    let monthKey = '';
+    if(date.match(/^\d{4}-\d{2}-\d{2}$/)){
+      monthKey = date.substring(0,7);
+    } else {
+      monthKey = date.replace(' 預估','').trim();
+    }
+    
+    if(!groups[monthKey]) groups[monthKey] = [];
+    groups[monthKey].push({code:s.code, name:s.name||STOCK_NAMES[s.code], date, confirmed, divAmt, cost:s.cost, divY:s.divY});
+  });
+
+  const sortedKeys = Object.keys(groups).sort();
+  
+  row.innerHTML = sortedKeys.map(key=>{
+    const stocks = groups[key];
+    const hasConfirmed = stocks.some(s=>s.confirmed);
+    const borderColor = hasConfirmed ? '#9FE1CB' : 'var(--border)';
+    const bg = hasConfirmed ? 'var(--green-lt)' : 'var(--surface)';
+    const tagColor = hasConfirmed ? 'var(--green-dk)' : 'var(--amber-dk)';
+    const dateColor = hasConfirmed ? 'var(--green-dk)' : 'var(--amber)';
+    const nameColor = hasConfirmed ? 'var(--green-xdk)' : 'var(--text)';
+    const tagText = hasConfirmed ? '已確認' : key.includes('預估')?key:'預估';
+    
+    // show first confirmed date or month
+    const confirmedStock = stocks.find(s=>s.confirmed);
+    const displayDate = confirmedStock ? confirmedStock.date : key;
+    
+    // total annual div for this group
+    const totalDiv = stocks.reduce((a,s)=>a+s.cost*s.divY,0);
+    const divLine = confirmedStock && confirmedStock.divAmt 
+      ? `每股 $${confirmedStock.divAmt}　共 ~$${(totalDiv/1e6).toFixed(2)}M`
+      : `合計 ~$${(totalDiv/1e6).toFixed(2)}M`;
+    
+    const nameText = stocks.length===1 ? stocks[0].name||STOCK_NAMES[stocks[0].code] 
+      : stocks.map(s=>s.name||STOCK_NAMES[s.code]).join(' / ');
+    
+    return `<div class="dc" style="border-color:${borderColor};background:${bg}">
+      <div class="dc-tag" style="color:${tagColor}">${tagText}</div>
+      <div class="dc-name" style="color:${nameColor}">${nameText}</div>
+      <div class="dc-date" style="color:${dateColor}">${displayDate}</div>
+      <div class="dc-amt" style="color:${nameColor}">${divLine}</div>
+    </div>`;
+  }).join('');
+}
 
 async function fetchHistory(){
   try {
@@ -450,9 +517,11 @@ document.querySelectorAll('.mtab').forEach(btn=>btn.addEventListener('click',fun
   update();
 }));
 
+fetchExDivData();
 fetchHistory();
 fetchPrices();
 setInterval(fetchPrices, 5*60*1000);
+setInterval(fetchExDivData, 60*60*1000);
 </script>
 </body>
 </html>
