@@ -291,15 +291,23 @@ function renderExDiv(){
   const merged = {};
   BASE.forEach(s=>{ merged[s.code] = exDivData[s.code] || defaultInfo[s.code] || {date:'預估',confirmed:false,divAmount:''}; });
 
-  // Group by month/date for display
+  // Group by date: confirmed stocks each get their own card by exact date,
+  // unconfirmed stocks group by month
   const groups = {};
   BASE.forEach(s=>{
     const info = merged[s.code];
     const date = info.date || '';
-    let key = date.match(/^\d{4}-\d{2}-\d{2}$/) ? date.substring(0,7) : date.replace(' 預估','').trim();
+    const confirmed = info.confirmed;
+    // confirmed with exact date => group by full date; otherwise group by month string
+    let key;
+    if(confirmed && date.match(/\d{4}-\d{2}-\d{2}/)){
+      key = date.substring(0,10); // exact date as key
+    } else {
+      key = date.replace(' 預估','').trim(); // e.g. "2026-07"
+    }
     if(!groups[key]) groups[key]={stocks:[],hasConfirmed:false};
     groups[key].stocks.push({...s, ...info, name:STOCK_NAMES[s.code]});
-    if(info.confirmed) groups[key].hasConfirmed=true;
+    if(confirmed) groups[key].hasConfirmed=true;
   });
 
   const sortedKeys = Object.keys(groups).sort();
