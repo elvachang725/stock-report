@@ -216,6 +216,23 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
   <footer>特別股投資報告　公司內部使用　｜　收盤價資料來源：Google Finance（延遲最多 20 分鐘）</footer>
 </div>
 
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-mark"><span></span></div>
+      <div>
+        <div class="login-title">特別股投資報告</div>
+        <div class="login-sub">公司內部使用，請輸入密碼</div>
+      </div>
+    </div>
+    <label class="login-label">存取密碼</label>
+    <input class="login-input" type="password" id="pwInput" placeholder="••••••••" maxlength="20">
+    <button class="login-btn" id="pwBtn">進入報告</button>
+    <div class="login-error" id="pwError">密碼錯誤，請再試一次</div>
+    <div class="login-footer">CONFIDENTIAL · 僅供授權人員存取</div>
+  </div>
+</div>
+
 <script>
 const API_URL = 'https://script.google.com/macros/s/AKfycbzWk2Fw0s3tdd1H2vWoGEQBGZHMQkvNhYpuFHuemEYPwKvhEnoXSKxgh8D6xPLLb-xEsA/exec';
 let historyData = [];
@@ -526,9 +543,59 @@ document.querySelectorAll('.mtab').forEach(btn=>btn.addEventListener('click',fun
   update();
 }));
 
-fetchExDivData();
-fetchHistory();
-fetchPrices();
+// ── Password protection ──
+const PASS_KEY = 'stock_auth_v1';
+const PASS_HASH = '8e90a0e4b1f4e2c3d5a6b7c8d9e0f1a2'; // placeholder, replaced below
+
+function simpleHash(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++) h = Math.imul(31,h)+str.charCodeAt(i)|0;
+  return Math.abs(h).toString(16).padStart(8,'0');
+}
+
+// Password is: stock2026  (change this by updating the hash below)
+const CORRECT_HASH = simpleHash('stock2026');
+
+function checkAuth(){
+  const saved = sessionStorage.getItem(PASS_KEY);
+  if(saved === CORRECT_HASH){
+    document.getElementById('loginOverlay').style.display='none';
+    return true;
+  }
+  return false;
+}
+
+function tryLogin(){
+  const pw = document.getElementById('pwInput').value;
+  if(simpleHash(pw) === CORRECT_HASH){
+    sessionStorage.setItem(PASS_KEY, CORRECT_HASH);
+    document.getElementById('loginOverlay').style.display='none';
+    fetchExDivData();
+    fetchHistory();
+    fetchPrices();
+    setInterval(fetchPrices, 5*60*1000);
+    setInterval(fetchExDivData, 60*60*1000);
+  } else {
+    document.getElementById('pwError').style.display='block';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+document.getElementById('pwBtn').addEventListener('click', tryLogin);
+document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+
+// Check if already authenticated
+if(!checkAuth()){
+  // Show login, don't fetch data yet
+  setTimeout(()=>document.getElementById('pwInput').focus(), 100);
+} else {
+  fetchExDivData();
+  fetchHistory();
+  fetchPrices();
+  setInterval(fetchPrices, 5*60*1000);
+  setInterval(fetchExDivData, 60*60*1000);
+}
 setInterval(fetchPrices, 5*60*1000);
 setInterval(fetchExDivData, 60*60*1000);
 </script>
