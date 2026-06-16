@@ -309,7 +309,9 @@ function renderExDiv(){
     const conf = g.hasConfirmed;
     const confirmedStock = g.stocks.find(s=>s.confirmed);
     const totalDiv = g.stocks.reduce((a,s)=>a+s.cost*s.divY,0);
-    const displayDate = confirmedStock ? confirmedStock.date : key+(key.match(/^\d{4}-\d{2}$/)?'':' 預估');
+    const rawDate = confirmedStock ? String(confirmedStock.date) : '';
+    const cleanDate = rawDate.length >= 10 ? rawDate.substring(0,10) : rawDate;
+    const displayDate = confirmedStock ? cleanDate : key+(key.match(/^\d{4}-\d{2}$/)?'':' 預估');
     const nameText = g.stocks.length===1 ? g.stocks[0].name : g.stocks.map(s=>s.name).join(' / ');
     const divLine = confirmedStock && confirmedStock.divAmount
       ? `每股 $${confirmedStock.divAmount}　共 ~$${(totalDiv/1e6).toFixed(2)}M`
