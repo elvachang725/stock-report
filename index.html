@@ -275,7 +275,7 @@ const fmtM=n=>(n/1e6).toFixed(2)+'M';
 
 async function fetchExDivData(){
   try {
-    const res = await fetch(API_URL+'?mode=exdiv');
+    const res = await fetch(API_URL+'?mode=exdiv', {redirect:'follow', cache:'no-store'});
     if(!res.ok) throw new Error();
     exDivData = await res.json();
     renderExDiv();
@@ -353,7 +353,7 @@ function renderExDiv(){
 
 async function fetchHistory(){
   try {
-    const res = await fetch(API_URL+'?mode=history');
+    const res = await fetch(API_URL+'?mode=history', {redirect:'follow', cache:'no-store'});
     if(!res.ok) throw new Error();
     historyData = await res.json();
     // populate date selector
@@ -388,7 +388,7 @@ async function fetchHistory(){
 
 async function fetchPrices(){
   try {
-    const res = await fetch(API_URL);
+    const res = await fetch(API_URL, {redirect:'follow', cache:'no-store'});
     if(!res.ok) throw new Error('fetch failed');
     const data = await res.json();
     const newPrices = [...prices];
