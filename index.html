@@ -113,6 +113,13 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 #panel-7839 table.tbl7839 th{color:#6b6862;font-weight:600;background:#faf9f6}
 #panel-7839 table.tbl7839 tr:last-child td{border-bottom:none}
 #panel-7839 #status7839{font-size:12px;color:#6b6862;margin-bottom:14px}
+#panel-7839 .div-row7839{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+#panel-7839 .dc7839{border-radius:8px;padding:14px 16px;border:1px solid #9FE1CB;background:#e1f5ee}
+#panel-7839 .dc7839-tag{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px;color:#0f6e56}
+#panel-7839 .dc7839-name{font-size:14px;font-weight:600;color:#085041;margin-bottom:4px}
+#panel-7839 .dc7839-date{font-size:13px;font-family:'DM Mono',monospace;color:#0f6e56}
+#panel-7839 .dc7839-amt{font-size:12px;color:#1f1e1c;margin-top:6px}
+@media(max-width:800px){#panel-7839 .div-row7839{grid-template-columns:1fr}}
 
 /* ---- 特別股投資報告樣式 ---- */
 #panel-pref .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -275,6 +282,9 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
       <thead><tr><th>買進單價</th><th>股數</th><th>手續費</th><th>總成本</th><th>當日損益</th></tr></thead>
       <tbody id="lotsBody7839"></tbody>
     </table>
+
+    <div class="sec mb18" style="margin-top:24px">除息資訊</div>
+    <div class="div-row7839 mb24" id="exdiv-row-7839"></div>
 
     <footer>收盤價／成交量資料來源：Google Sheets ｜ 僅供內部參考，非即時報價</footer>
   </div>
@@ -457,6 +467,16 @@ const SHEET_CSV_URL_7839 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSe1
 const LIVE_PRICE_CSV_URL_7839 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSe1KrKnHUTcrc2OuXKHT00UKQVe40NdUHI0wErgYI_IqEY9S539Ockm2L9mRNcZZ-qUDH6IWbkY2oM/pub?gid=783974389&single=true&output=csv";
 const DIVIDEND_PER_SHARE_7839 = 2.03529174;
 
+// 除息資訊（依董事會決議公告，民國115年6/16決議）
+const EXDIV_INFO_7839 = {
+  exDivDate: '2026-07-03',      // 除權息交易日
+  recordDate: '2026-07-11',     // 除權息基準日
+  lastTransferDate: '2026-07-06', // 最後過戶日
+  payDate: '2026-07-29',        // 現金股利發放日期
+  perShare: 2.03529174,         // 每股配發現金
+  confirmed: true
+};
+
 function parseCSVLine(line){
   const result = [];
   let cur = '';
@@ -537,6 +557,43 @@ function buildDateSelect7839(){
   render7839(records7839.length - 1);
 }
 
+function renderExDiv7839(shares, divTotal, potentialPct){
+  const row = document.getElementById('exdiv-row-7839');
+  if(!row) return;
+  const info = EXDIV_INFO_7839;
+  row.innerHTML =
+    '<div class="dc7839">' +
+      '<div class="dc7839-tag">已確認</div>' +
+      '<div class="dc7839-name">除權息交易日</div>' +
+      '<div class="dc7839-date">' + info.exDivDate + '</div>' +
+      '<div class="dc7839-amt">除息前最後過戶日 ' + info.lastTransferDate + '</div>' +
+    '</div>' +
+    '<div class="dc7839">' +
+      '<div class="dc7839-tag">已確認</div>' +
+      '<div class="dc7839-name">除權息基準日</div>' +
+      '<div class="dc7839-date">' + info.recordDate + '</div>' +
+      '<div class="dc7839-amt">每股配發現金 $' + info.perShare.toFixed(4) + '</div>' +
+    '</div>' +
+    '<div class="dc7839">' +
+      '<div class="dc7839-tag">已確認</div>' +
+      '<div class="dc7839-name">現金股利發放日</div>' +
+      '<div class="dc7839-date">' + info.payDate + '</div>' +
+      '<div class="dc7839-amt">依董事會 6/16 決議公告</div>' +
+    '</div>' +
+    '<div class="dc7839" style="background:#fff;border-color:#e3e0d8">' +
+      '<div class="dc7839-tag" style="color:#854f0b">依持股計算</div>' +
+      '<div class="dc7839-name" style="color:#1f1e1c">預估股利總額</div>' +
+      '<div class="dc7839-date" style="color:#854f0b">$' + fmt(divTotal) + '</div>' +
+      '<div class="dc7839-amt">以目前持股 ' + fmt(shares) + ' 股計算</div>' +
+    '</div>' +
+    '<div class="dc7839" style="background:#fff;border-color:#e3e0d8">' +
+      '<div class="dc7839-tag" style="color:#0f6e56">含股利</div>' +
+      '<div class="dc7839-name" style="color:#1f1e1c">總獲利率（利得＋股利）</div>' +
+      '<div class="dc7839-date" style="color:' + (potentialPct>=0?'#0f6e56':'#a32d2d') + '">' + (potentialPct>=0?'+':'') + potentialPct.toFixed(2) + '%</div>' +
+      '<div class="dc7839-amt">相對累計成本</div>' +
+    '</div>';
+}
+
 function render7839(idx){
   let shares = 0, cost = 0;
   for(let i = 0; i <= idx; i++){
@@ -574,6 +631,8 @@ function render7839(idx){
     return '<tr><td>' + l.price.toFixed(1) + '</td><td>' + fmt(l.qty) + '</td><td>' + fmt(l.fee) + '</td><td>$' + fmt(tc) + '</td>' +
       '<td style="color:' + color + '">' + (g>=0?'+':'') + '$' + fmt(g) + '</td></tr>';
   }).join('');
+
+  renderExDiv7839(shares, divTotal, potentialPct);
 
   // 更新總覽頁彙總資料
   window.summary7839 = { cost: cost, mkt: marketValue, gain: gain, live: useLive };
