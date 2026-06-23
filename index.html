@@ -255,7 +255,7 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
     <div class="grid7839" id="topMetrics7839"></div>
     <div class="grid7839" id="gainMetrics7839" style="margin-bottom:24px"></div>
     <table class="tbl7839" id="lotsTable7839">
-      <thead><tr><th>買進單價</th><th>股數</th><th>手續費</th><th>總成本</th><th>當日損益</th></tr></thead>
+      <thead><tr><th>買進單價</th><th>股數</th><th>手續費（元）</th><th>總成本（仟元）</th><th>當日損益（仟元）</th></tr></thead>
       <tbody id="lotsBody7839"></tbody>
     </table>
 
@@ -272,7 +272,7 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 
     <div class="sec mb18">特別股 總覽</div>
     <div class="kpi-row" style="margin-bottom:10px">
-      <div class="kpi c-navy"><div class="kpi-l">總投入成本</div><div class="kpi-v">$2.000 億</div><div class="kpi-s">新台幣</div></div>
+      <div class="kpi c-navy"><div class="kpi-l">總投入成本</div><div class="kpi-v" id="kpi-cost">—</div><div class="kpi-s">新台幣</div></div>
       <div class="kpi c-blue"><div class="kpi-l">目前市值</div><div class="kpi-v" id="kpi-mkt" style="color:var(--blue)">—</div><div class="kpi-s">新台幣</div></div>
       <div class="kpi c-green"><div class="kpi-l">未實現利得</div><div class="kpi-v" id="kpi-gain">—</div><div class="kpi-s" id="kpi-gain-pct"></div></div>
       <div class="kpi c-teal"><div class="kpi-l">年化總報酬率</div><div class="kpi-v" id="kpi-ret" style="color:var(--teal)">—</div><div class="kpi-s" id="kpi-ret-sub"></div></div>
@@ -285,13 +285,13 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
       </div>
       <div class="kpi" style="border-left:4px solid var(--teal)">
         <div class="kpi-l">組合平均殖利率</div>
-        <div class="kpi-v" style="font-size:32px;color:var(--teal)">4.29%</div>
+        <div class="kpi-v" id="kpi-avgyield" style="font-size:32px;color:var(--teal)">—</div>
         <div class="kpi-s">以投入成本計算</div>
       </div>
       <div class="kpi" style="border-left:4px solid var(--green)">
         <div class="kpi-l">預估年領股利</div>
-        <div class="kpi-v" style="font-size:32px;color:var(--green)">$8.58M</div>
-        <div class="kpi-s">每月約 $71.5 萬入帳</div>
+        <div class="kpi-v" id="kpi-anndiv" style="font-size:32px;color:var(--green)">—</div>
+        <div class="kpi-s" id="kpi-anndiv-sub"></div>
       </div>
     </div>
 
@@ -326,9 +326,9 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
       </div>
       <div class="eff-card">
         <div class="eff-l">每月穩定股利收入（預估）</div>
-        <div class="eff-v" style="color:var(--blue)">$71.5 萬</div>
+        <div class="eff-v" id="eff-monthly" style="color:var(--blue)">—</div>
         <div class="bar-wrap"><div class="bar" style="width:68%;background:var(--blue)"></div></div>
-        <div class="eff-n">全年 $8.58M ÷ 12 個月<br><span style="color:var(--text3)">7–9 月除息，下半年集中入帳</span></div>
+        <div class="eff-n" id="eff-monthly-note"></div>
       </div>
     </div>
 
@@ -340,11 +340,11 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
           <th data-col="shares">股數</th>
           <th data-col="avgCost">均價</th>
           <th data-col="close">收盤</th>
-          <th data-col="gain">利得（千）</th>
+          <th data-col="gain">利得（仟元）</th>
           <th data-col="gainPct">利得率</th>
           <th data-col="divY">殖利率</th>
           <th data-col="totalReturn">總報酬率</th>
-          <th data-col="annDiv">預估年息</th>
+          <th data-col="annDiv">預估年息（仟元）</th>
           <th data-col="exDiv">除息日</th>
           <th data-col="payDate">發放日</th>
         </tr></thead>
@@ -476,6 +476,7 @@ function parseCSVLine(line){
 function parseCSV(text){ return text.trim().split(/\r?\n/).map(parseCSVLine); }
 function toNum(s){ return parseFloat(String(s).replace(/,/g,'')); }
 function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+function fmtK(n){ return (n/1000).toLocaleString('en-US', {minimumFractionDigits:1, maximumFractionDigits:1}); }
 
 let records7839 = [];
 let livePrice7839 = null;
@@ -567,7 +568,7 @@ function renderExDivDynamic7839(shares, divTotal, potentialPct){
     '<div class="dc7839" id="exdiv-dyn-cards-7839" style="background:#fff;border-color:#e3e0d8">' +
       '<div class="dc7839-tag" style="color:#854f0b">依持股計算</div>' +
       '<div class="dc7839-name" style="color:#1f1e1c">預估股利總額</div>' +
-      '<div class="dc7839-date" style="color:#854f0b">$' + fmt(divTotal) + '</div>' +
+      '<div class="dc7839-date" style="color:#854f0b">$' + fmtK(divTotal) + ' 仟元</div>' +
       '<div class="dc7839-amt">以目前持股 ' + fmt(shares) + ' 股計算</div>' +
     '</div>' +
     '<div class="dc7839" style="background:#fff;border-color:#e3e0d8">' +
@@ -600,30 +601,30 @@ function render7839(idx){
 
   document.getElementById('topMetrics7839').innerHTML =
     '<div class="card7839"><div class="label">累計持股</div><div class="value">' + fmt(shares) + ' 股</div></div>' +
-    '<div class="card7839"><div class="label">累計成本</div><div class="value">$' + fmt(cost) + '</div></div>' +
+    '<div class="card7839"><div class="label">累計成本</div><div class="value">$' + fmtK(cost) + ' 仟元</div></div>' +
     '<div class="card7839"><div class="label">平均成本</div><div class="value">$' + avgCost.toFixed(2) + '</div></div>' +
     '<div class="card7839"><div class="label">當日收盤價</div><div class="value">$' + close.toFixed(2) + priceTag + '</div></div>';
 
   document.getElementById('gainMetrics7839').innerHTML =
-    '<div class="card7839 ' + gainCls + '"><div class="label">即時利得</div><div class="value">' + (gain>=0?'+':'') + '$' + fmt(gain) + '</div><div class="sub">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '%</div></div>' +
-    '<div class="card7839 warn"><div class="label">預估股利</div><div class="value">$' + fmt(divTotal) + '</div><div class="sub">每股 ' + DIVIDEND_PER_SHARE_7839 + '</div></div>' +
-    '<div class="card7839 ' + gainCls + '"><div class="label">潛在總收益</div><div class="value">' + (potential>=0?'+':'') + '$' + fmt(potential) + '</div><div class="sub">' + (potentialPct>=0?'+':'') + potentialPct.toFixed(2) + '%</div></div>';
+    '<div class="card7839 ' + gainCls + '"><div class="label">即時利得</div><div class="value">' + (gain>=0?'+':'') + '$' + fmtK(gain) + ' 仟元</div><div class="sub">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '%</div></div>' +
+    '<div class="card7839 warn"><div class="label">預估股利</div><div class="value">$' + fmtK(divTotal) + ' 仟元</div><div class="sub">每股 ' + DIVIDEND_PER_SHARE_7839 + '</div></div>' +
+    '<div class="card7839 ' + gainCls + '"><div class="label">潛在總收益</div><div class="value">' + (potential>=0?'+':'') + '$' + fmtK(potential) + ' 仟元</div><div class="sub">' + (potentialPct>=0?'+':'') + potentialPct.toFixed(2) + '%</div></div>';
 
   document.getElementById('lotsBody7839').innerHTML = records7839[idx].lots.map(function(l){
     const amount = l.price * l.qty, tc = amount + l.fee, val = l.qty * close, g = val - tc;
     const color = g >= 0 ? 'var(--green-dk)' : 'var(--red-dk)';
-    return '<tr><td>' + l.price.toFixed(1) + '</td><td>' + fmt(l.qty) + '</td><td>' + fmt(l.fee) + '</td><td>$' + fmt(tc) + '</td>' +
-      '<td style="color:' + color + '">' + (g>=0?'+':'') + '$' + fmt(g) + '</td></tr>';
+    return '<tr><td>' + l.price.toFixed(1) + '</td><td>' + fmt(l.qty) + '</td><td>' + fmt(l.fee) + '</td><td>$' + fmtK(tc) + '</td>' +
+      '<td style="color:' + color + '">' + (g>=0?'+':'') + '$' + fmtK(g) + '</td></tr>';
   }).join('');
 
   renderExDivDynamic7839(shares, divTotal, potentialPct);
 
   // 更新總覽頁彙總資料
   window.summary7839 = { cost: cost, mkt: marketValue, gain: gain, live: useLive };
-  document.getElementById('bd7839-cost').textContent = '$' + fmt(cost);
-  document.getElementById('bd7839-mkt').textContent = '$' + fmt(marketValue);
+  document.getElementById('bd7839-cost').textContent = '$' + fmtK(cost) + ' 仟元';
+  document.getElementById('bd7839-mkt').textContent = '$' + fmtK(marketValue) + ' 仟元';
   const gEl = document.getElementById('bd7839-gain');
-  gEl.textContent = (gain>=0?'+':'') + '$' + fmt(gain);
+  gEl.textContent = (gain>=0?'+':'') + '$' + fmtK(gain) + ' 仟元';
   gEl.className = 'v ' + (gain>=0?'pos':'neg');
   document.getElementById('bd7839-status').innerHTML = useLive
     ? '<span class="bdg bdg-live">即時</span>'
@@ -859,9 +860,10 @@ function update(){
   const totalRet=totalGain/TOTAL_COST+AVG_YIELD;
   const totalShares=S.reduce((a,s)=>a+s.shares,0);
 
-  document.getElementById('kpi-mkt').textContent='$'+(totalMkt/1e8).toFixed(3)+'億';
+  document.getElementById('kpi-cost').textContent='$'+fmtK(TOTAL_COST)+' 仟元';
+  document.getElementById('kpi-mkt').textContent='$'+fmtK(totalMkt)+' 仟元';
   const gEl=document.getElementById('kpi-gain');
-  gEl.textContent=(totalGain>=0?'+':'')+fmtM(totalGain);
+  gEl.textContent=(totalGain>=0?'+':'')+'$'+fmtK(totalGain)+' 仟元';
   gEl.style.color=totalGain>=0?'var(--green)':'var(--red)';
   document.getElementById('kpi-gain-pct').textContent=pct(totalGain/TOTAL_COST);
   document.getElementById('kpi-ret').textContent=pct(totalRet);
@@ -870,6 +872,11 @@ function update(){
   const gp2=document.getElementById('kpi-gainpct2');
   gp2.textContent=pct(totalGain/TOTAL_COST);
   gp2.style.color=totalGain>=0?'var(--green)':'var(--red)';
+  document.getElementById('kpi-avgyield').textContent=pct(AVG_YIELD);
+  document.getElementById('kpi-anndiv').textContent='$'+fmtK(TOTAL_DIV)+' 仟元';
+  document.getElementById('kpi-anndiv-sub').textContent='每月約 $'+fmtK(TOTAL_DIV/12)+' 仟元入帳';
+  document.getElementById('eff-monthly').textContent='$'+fmtK(TOTAL_DIV/12)+' 仟元';
+  document.getElementById('eff-monthly-note').innerHTML='全年 $'+fmtK(TOTAL_DIV)+' 仟元 ÷ 12 個月<br><span style="color:var(--text3)">7–9 月除息，下半年集中入帳</span>';
 
   let prevPrices, prevLabel;
   if(prevMode==='sel' && selectedDatePrices){
@@ -888,15 +895,15 @@ function update(){
 
   document.getElementById('mom-prev-label').textContent=prevLabel;
   const pvEl=document.getElementById('mom-prev-val');
-  pvEl.textContent=(prevGain>=0?'+':'')+fmtM(prevGain);
+  pvEl.textContent=(prevGain>=0?'+':'')+'$'+fmtK(prevGain)+' 仟元';
   pvEl.style.color=prevGain>=0?'var(--green)':'var(--red)';
   document.getElementById('mom-prev-pct').textContent='佔投入 '+pct(prevGain/TOTAL_COST);
   const cvEl=document.getElementById('mom-curr-val');
-  cvEl.textContent=(totalGain>=0?'+':'')+fmtM(totalGain);
+  cvEl.textContent=(totalGain>=0?'+':'')+'$'+fmtK(totalGain)+' 仟元';
   cvEl.style.color=totalGain>=0?'var(--green)':'var(--red)';
   document.getElementById('mom-curr-pct').textContent='佔投入 '+pct(totalGain/TOTAL_COST);
   const dEl=document.getElementById('mom-delta');
-  dEl.textContent=(delta>=0?'+':'')+fmtM(delta);
+  dEl.textContent=(delta>=0?'+':'')+'$'+fmtK(delta)+' 仟元';
   dEl.style.color=delta>=0?'var(--green)':'var(--red)';
   document.getElementById('mom-pill').innerHTML=`<span class="pill ${delta>=0?'pill-up':'pill-dn'}">${delta>=0?'↑ 改善':'↓ 擴大'}</span>`;
   document.getElementById('mom-note').textContent=delta<0?'部分大部位收盤價下滑，拉大帳損。股利收益不受影響。':delta>0?'整體帳面利得較前期改善。':'與前期相比變化不大。';
@@ -935,10 +942,10 @@ function update(){
 
   // 更新總覽頁彙總資料
   window.summaryPref = { cost: TOTAL_COST, mkt: totalMkt, gain: totalGain, yield: AVG_YIELD, live:true };
-  document.getElementById('bdpref-cost').textContent = '$' + fmtM(TOTAL_COST);
-  document.getElementById('bdpref-mkt').textContent = '$' + (totalMkt/1e8).toFixed(3)+'億';
+  document.getElementById('bdpref-cost').textContent = '$' + fmtK(TOTAL_COST) + ' 仟元';
+  document.getElementById('bdpref-mkt').textContent = '$' + fmtK(totalMkt) + ' 仟元';
   const bgEl = document.getElementById('bdpref-gain');
-  bgEl.textContent = (totalGain>=0?'+':'') + fmtM(totalGain);
+  bgEl.textContent = (totalGain>=0?'+':'') + '$' + fmtK(totalGain) + ' 仟元';
   bgEl.className = 'v ' + (totalGain>=0?'pos':'neg');
   document.getElementById('bdpref-yield').textContent = pct(AVG_YIELD);
 
@@ -957,7 +964,7 @@ function renderTable(S,totalGain,totalShares){
       <td class="${s.gain>=0?'pos':'neg'}">${pct(s.gainPct)}</td>
       <td style="color:#0F7EA6">${pct(s.divY)}</td>
       <td class="${s.totalReturn>=0?'pos':'neg'}" style="font-weight:500">${pct(s.totalReturn)}</td>
-      <td>$${fmtM(s.annDiv)}</td>
+      <td>$${fmtK(s.annDiv)}</td>
       <td style="font-family:var(--font)"><span class="bdg2 ${s.conf?'bdg-conf':'bdg-est'}">${s.exDiv}</span></td>
       <td style="font-family:var(--font)">${s.payDate}</td>
     </tr>`).join('')+
@@ -967,7 +974,7 @@ function renderTable(S,totalGain,totalShares){
       <td class="${totalGain>=0?'pos':'neg'}">${pct(totalGain/TOTAL_COST)}</td>
       <td style="color:#0F7EA6">${pct(TOTAL_DIV/TOTAL_COST)}</td>
       <td class="${(totalGain/TOTAL_COST+AVG_YIELD)>=0?'pos':'neg'}" style="font-weight:500">${pct(totalGain/TOTAL_COST+AVG_YIELD)}</td>
-      <td>$${fmtM(TOTAL_DIV)}</td><td>—</td><td>—</td>
+      <td>$${fmtK(TOTAL_DIV)}</td><td>—</td><td>—</td>
     </tr>`;
   document.querySelectorAll('#panel-pref thead th[data-col]').forEach(th=>{
     th.classList.remove('sa','sd');
