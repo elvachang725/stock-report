@@ -179,6 +179,7 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
         <th data-col="gain">利得（千）</th>
         <th data-col="gainPct">利得率</th>
         <th data-col="divY">殖利率</th>
+        <th data-col="totalReturn">總報酬率</th>
         <th data-col="annDiv">預估年息</th>
         <th data-col="exDiv">除息日</th>
         <th data-col="payDate">發放日</th>
@@ -430,13 +431,15 @@ async function fetchPrices(){
 function update(){
   const S=BASE.map((s,i)=>{
     const info = getExDivInfo(s.code);
+    const gainPct = (prices[i]*s.shares-s.cost)/s.cost;
     return {
       ...s,
       close:prices[i],
       avgCost:s.cost/s.shares,
       gain:prices[i]*s.shares-s.cost,
-      gainPct:(prices[i]*s.shares-s.cost)/s.cost,
+      gainPct:gainPct,
       annDiv:s.cost*s.divY,
+      totalReturn: gainPct + s.divY,
       exDiv: info.confirmed ? (info.date.length>=10 ? info.date.substring(0,10)+' ✓' : info.date+' ✓') : info.date,
       conf: info.confirmed,
       payDate: info.payDate || '—',
@@ -498,13 +501,15 @@ function update(){
   if(prevMode==='sel' && selectedDatePrices){
     const Ssel=BASE.map((s,i)=>{
       const info = getExDivInfo(s.code);
+      const gainPctSel = (selectedDatePrices[i]*s.shares-s.cost)/s.cost;
       return {
         ...s,
         close:selectedDatePrices[i],
         avgCost:s.cost/s.shares,
         gain:selectedDatePrices[i]*s.shares-s.cost,
-        gainPct:(selectedDatePrices[i]*s.shares-s.cost)/s.cost,
+        gainPct:gainPctSel,
         annDiv:s.cost*s.divY,
+        totalReturn: gainPctSel + s.divY,
         exDiv: info.confirmed ? (info.date.length>=10 ? info.date.substring(0,10)+' ✓' : info.date+' ✓') : info.date,
         conf: info.confirmed,
         payDate: info.payDate || '—',
@@ -534,6 +539,7 @@ function renderTable(S,totalGain,totalShares){
       <td class="${s.gain>=0?'pos':'neg'}" style="font-weight:500">${sgn(s.gain)}${fmtN(Math.round(s.gain/1000))}</td>
       <td class="${s.gain>=0?'pos':'neg'}">${pct(s.gainPct)}</td>
       <td style="color:#0F7EA6">${pct(s.divY)}</td>
+      <td class="${s.totalReturn>=0?'pos':'neg'}" style="font-weight:500">${pct(s.totalReturn)}</td>
       <td>$${fmtM(s.annDiv)}</td>
       <td style="font-family:var(--font)"><span class="bdg ${s.conf?'bdg-conf':'bdg-est'}">${s.exDiv}</span></td>
       <td style="font-family:var(--font)">${s.payDate}</td>
@@ -543,6 +549,7 @@ function renderTable(S,totalGain,totalShares){
       <td class="${totalGain>=0?'pos':'neg'}" style="font-weight:500">${sgn(totalGain)}${fmtN(Math.round(totalGain/1000))}</td>
       <td class="${totalGain>=0?'pos':'neg'}">${pct(totalGain/TOTAL_COST)}</td>
       <td style="color:#0F7EA6">${pct(TOTAL_DIV/TOTAL_COST)}</td>
+      <td class="${(totalGain/TOTAL_COST+AVG_YIELD)>=0?'pos':'neg'}" style="font-weight:500">${pct(totalGain/TOTAL_COST+AVG_YIELD)}</td>
       <td>$${fmtM(TOTAL_DIV)}</td><td>—</td><td>—</td>
     </tr>`;
   document.querySelectorAll('thead th[data-col]').forEach(th=>{
