@@ -181,6 +181,7 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
         <th data-col="divY">殖利率</th>
         <th data-col="annDiv">預估年息</th>
         <th data-col="exDiv">除息日</th>
+        <th data-col="payDate">發放日</th>
       </tr></thead>
       <tbody id="tbody"></tbody>
     </table>
@@ -245,18 +246,35 @@ const STOCK_NAMES = {
   '2887E':'台新戊特','6592A':'和潤甲特','6592B':'和潤乙特','9941A':'裕融甲特'
 };
 
+// 預設除息日 / 發放日資料（與 Google Sheets 同步，API 抓不到資料時的備援值）
+// 有新確認日期時，請同時更新 Google Sheets 與下面這份預設值
+const DEFAULT_EXDIV = {
+  '2891B':{date:'2026-08 預估',confirmed:false,divAmount:'',payDate:''},
+  '2891C':{date:'2026-08 預估',confirmed:false,divAmount:'',payDate:''},
+  '2881A':{date:'2026-07-01',confirmed:true,divAmount:'2.74875',payDate:'2026-07-31'},
+  '2881B':{date:'2026-07-01',confirmed:true,divAmount:'2.57235617',payDate:'2026-07-31'},
+  '2882A':{date:'2026-06-30',confirmed:true,divAmount:'2.526',payDate:'2026-07-28'},
+  '2882B':{date:'2026-06-30',confirmed:true,divAmount:'2.280658',payDate:'2026-07-28'},
+  '1101B':{date:'2026-07-01',confirmed:true,divAmount:'2.02625',payDate:'2026-07-28'},
+  '2838A':{date:'2026-07-03',confirmed:true,divAmount:'2.630625',payDate:'2026-07-27'},
+  '2887E':{date:'2026-07-01',confirmed:true,divAmount:'2.4363',payDate:'2026-07-23'},
+  '6592A':{date:'2026-06-30',confirmed:true,divAmount:'4.2',payDate:'2026-07-24'},
+  '6592B':{date:'2026-06-30',confirmed:true,divAmount:'4.5',payDate:'2026-07-24'},
+  '9941A':{date:'2026-09 預估',confirmed:false,divAmount:'',payDate:''},
+};
+
 const BASE=[
   {code:"2891B",name:"中信乙特",  shares:79000,  cost:5047609,  divY:0.04376,  exDiv:"2026-08 預估",conf:false, c430:64.6, c529:64.5},
   {code:"2891C",name:"中信丙特",  shares:111000, cost:6890349,  divY:0.03093,  exDiv:"2026-08 預估",conf:false, c430:62.2, c529:62.5},
-  {code:"2881A",name:"富邦甲特",  shares:145000, cost:9252098,  divY:0.043079, exDiv:"2026-08 預估",conf:false, c430:64.4, c529:63.8},
-  {code:"2881B",name:"富邦乙特",  shares:547000, cost:34147320, divY:0.041207, exDiv:"2026-08 預估",conf:false, c430:62.6, c529:62.7},
-  {code:"2882A",name:"國泰甲特",  shares:496000, cost:30746080, divY:0.04075,  exDiv:"2026-08 預估",conf:false, c430:62.3, c529:61.9},
-  {code:"2882B",name:"國泰乙特",  shares:245000, cost:14888474, divY:0.03753,  exDiv:"2026-08 預估",conf:false, c430:60.9, c529:60.8},
-  {code:"1101B",name:"台泥乙特",  shares:762000, cost:34700746, divY:0.044495, exDiv:"2026-07-11 ✓",conf:true,  c430:45.4, c529:45.3},
-  {code:"2838A",name:"聯邦銀甲特",shares:92000,  cost:5017517,  divY:0.048235, exDiv:"2026-07 預估",conf:false, c430:54.8, c529:54.3},
-  {code:"2887E",name:"台新戊特",  shares:504000, cost:25759358, divY:0.047667, exDiv:"2026-07 預估",conf:false, c430:51.5, c529:50.9},
-  {code:"6592A",name:"和潤甲特",  shares:98000,  cost:9549074,  divY:0.043104, exDiv:"2026-09 預估",conf:false, c430:97.3, c529:96.8},
-  {code:"6592B",name:"和潤乙特",  shares:140000, cost:13695361, divY:0.046001, exDiv:"2026-09 預估",conf:false, c430:97.5, c529:97.0},
+  {code:"2881A",name:"富邦甲特",  shares:145000, cost:9252098,  divY:0.043079, exDiv:"2026-07-01",conf:true, c430:64.4, c529:63.8},
+  {code:"2881B",name:"富邦乙特",  shares:547000, cost:34147320, divY:0.041207, exDiv:"2026-07-01",conf:true, c430:62.6, c529:62.7},
+  {code:"2882A",name:"國泰甲特",  shares:496000, cost:30746080, divY:0.04075,  exDiv:"2026-06-30",conf:true, c430:62.3, c529:61.9},
+  {code:"2882B",name:"國泰乙特",  shares:245000, cost:14888474, divY:0.03753,  exDiv:"2026-06-30",conf:true, c430:60.9, c529:60.8},
+  {code:"1101B",name:"台泥乙特",  shares:762000, cost:34700746, divY:0.044495, exDiv:"2026-07-01",conf:true,  c430:45.4, c529:45.3},
+  {code:"2838A",name:"聯邦銀甲特",shares:92000,  cost:5017517,  divY:0.048235, exDiv:"2026-07-03",conf:true, c430:54.8, c529:54.3},
+  {code:"2887E",name:"台新戊特",  shares:504000, cost:25759358, divY:0.047667, exDiv:"2026-07-01",conf:true, c430:51.5, c529:50.9},
+  {code:"6592A",name:"和潤甲特",  shares:98000,  cost:9549074,  divY:0.043104, exDiv:"2026-06-30",conf:true, c430:97.3, c529:96.8},
+  {code:"6592B",name:"和潤乙特",  shares:140000, cost:13695361, divY:0.046001, exDiv:"2026-06-30",conf:true, c430:97.5, c529:97.0},
   {code:"9941A",name:"裕融甲特",  shares:203000, cost:10287312, divY:0.046163, exDiv:"2026-09 預估",conf:false, c430:50.7, c529:50.3},
 ];
 
@@ -273,46 +291,32 @@ const pct=n=>sgn(n)+(n*100).toFixed(2)+'%';
 const fmtN=n=>Math.round(n).toLocaleString('zh-TW');
 const fmtM=n=>(n/1e6).toFixed(2)+'M';
 
+// 合併 API 即時資料 與 預設備援資料，回傳每檔股票目前已知的除息日/發放日資訊
+function getExDivInfo(code){
+  return exDivData[code] || DEFAULT_EXDIV[code] || {date:'預估',confirmed:false,divAmount:'',payDate:''};
+}
+
 async function fetchExDivData(){
   try {
     const res = await fetch(API_URL+'?mode=exdiv', {redirect:'follow', cache:'no-store'});
     if(!res.ok) throw new Error();
     exDivData = await res.json();
-    renderExDiv();
-  } catch(e){ 
-    renderExDiv(); // use defaults
+  } catch(e){
+    exDivData = {};
   }
+  renderExDiv();
+  update();
 }
 
 function renderExDiv(){
   const row = document.getElementById('exdiv-row');
   if(!row) return;
 
-  // Default exdiv info if not loaded yet
-  const defaultInfo = {
-    '2891B':{date:'2026-08 預估',confirmed:false,divAmount:''},
-    '2891C':{date:'2026-08 預估',confirmed:false,divAmount:''},
-    '2881A':{date:'2026-08 預估',confirmed:false,divAmount:''},
-    '2881B':{date:'2026-08 預估',confirmed:false,divAmount:''},
-    '2882A':{date:'2026-08 預估',confirmed:false,divAmount:''},
-    '2882B':{date:'2026-08 預估',confirmed:false,divAmount:''},
-    '1101B':{date:'2026-07-11',confirmed:true,divAmount:'2.02'},
-    '2838A':{date:'2026-07 預估',confirmed:false,divAmount:''},
-    '2887E':{date:'2026-07 預估',confirmed:false,divAmount:''},
-    '6592A':{date:'2026-09 預估',confirmed:false,divAmount:''},
-    '6592B':{date:'2026-09 預估',confirmed:false,divAmount:''},
-    '9941A':{date:'2026-09 預估',confirmed:false,divAmount:''},
-  };
-
-  // Merge with loaded data
-  const merged = {};
-  BASE.forEach(s=>{ merged[s.code] = exDivData[s.code] || defaultInfo[s.code] || {date:'預估',confirmed:false,divAmount:''}; });
-
   // Group by date: confirmed stocks each get their own card by exact date,
   // unconfirmed stocks group by month
   const groups = {};
   BASE.forEach(s=>{
-    const info = merged[s.code];
+    const info = getExDivInfo(s.code);
     const date = info.date || '';
     const confirmed = info.confirmed;
     // confirmed with exact date => group by full date; otherwise group by month string
@@ -341,12 +345,16 @@ function renderExDiv(){
     const divLine = confirmedStock && confirmedStock.divAmount
       ? `每股 $${confirmedStock.divAmount}　共 ~$${(totalDiv/1e6).toFixed(2)}M`
       : (g.stocks.length===1 ? `~$${(totalDiv/1e6).toFixed(2)}M` : `${g.stocks.length} 檔合計 ~$${(totalDiv/1e6).toFixed(2)}M`);
+    const payDateLine = confirmedStock && confirmedStock.payDate
+      ? `<div class="dc-amt" style="color:${conf?'var(--green-xdk)':'var(--text2)'}">發放日 ${confirmedStock.payDate}</div>`
+      : '';
 
     return `<div class="dc" style="border-color:${conf?'#9FE1CB':'var(--border)'};background:${conf?'var(--green-lt)':'var(--surface)'}">
       <div class="dc-tag" style="color:${conf?'var(--green-dk)':'var(--amber-dk)'}">${conf?'已確認':'預估'}</div>
       <div class="dc-name" style="color:${conf?'var(--green-xdk)':'var(--text)'}">${nameText}</div>
       <div class="dc-date" style="color:${conf?'var(--green-dk)':'var(--amber)'}">${displayDate}</div>
       <div class="dc-amt" style="color:${conf?'var(--green-xdk)':'var(--text2)'}">${divLine}</div>
+      ${payDateLine}
     </div>`;
   }).join('');
 }
@@ -420,14 +428,20 @@ async function fetchPrices(){
 }
 
 function update(){
-  const S=BASE.map((s,i)=>({
-    ...s,
-    close:prices[i],
-    avgCost:s.cost/s.shares,
-    gain:prices[i]*s.shares-s.cost,
-    gainPct:(prices[i]*s.shares-s.cost)/s.cost,
-    annDiv:s.cost*s.divY,
-  }));
+  const S=BASE.map((s,i)=>{
+    const info = getExDivInfo(s.code);
+    return {
+      ...s,
+      close:prices[i],
+      avgCost:s.cost/s.shares,
+      gain:prices[i]*s.shares-s.cost,
+      gainPct:(prices[i]*s.shares-s.cost)/s.cost,
+      annDiv:s.cost*s.divY,
+      exDiv: info.confirmed ? (info.date.length>=10 ? info.date.substring(0,10)+' ✓' : info.date+' ✓') : info.date,
+      conf: info.confirmed,
+      payDate: info.payDate || '—',
+    };
+  });
   const totalMkt=S.reduce((a,s)=>a+s.close*s.shares,0);
   const totalGain=S.reduce((a,s)=>a+s.gain,0);
   const totalRet=totalGain/TOTAL_COST+AVG_YIELD;
@@ -482,14 +496,20 @@ function update(){
 
   // If viewing selected date, show that date's prices in table
   if(prevMode==='sel' && selectedDatePrices){
-    const Ssel=BASE.map((s,i)=>({
-      ...s,
-      close:selectedDatePrices[i],
-      avgCost:s.cost/s.shares,
-      gain:selectedDatePrices[i]*s.shares-s.cost,
-      gainPct:(selectedDatePrices[i]*s.shares-s.cost)/s.cost,
-      annDiv:s.cost*s.divY,
-    }));
+    const Ssel=BASE.map((s,i)=>{
+      const info = getExDivInfo(s.code);
+      return {
+        ...s,
+        close:selectedDatePrices[i],
+        avgCost:s.cost/s.shares,
+        gain:selectedDatePrices[i]*s.shares-s.cost,
+        gainPct:(selectedDatePrices[i]*s.shares-s.cost)/s.cost,
+        annDiv:s.cost*s.divY,
+        exDiv: info.confirmed ? (info.date.length>=10 ? info.date.substring(0,10)+' ✓' : info.date+' ✓') : info.date,
+        conf: info.confirmed,
+        payDate: info.payDate || '—',
+      };
+    });
     const tgSel=Ssel.reduce((a,s)=>a+s.gain,0);
     const tsSel=Ssel.reduce((a,s)=>a+s.shares,0);
     // update table header to show selected date
@@ -516,13 +536,14 @@ function renderTable(S,totalGain,totalShares){
       <td style="color:#0F7EA6">${pct(s.divY)}</td>
       <td>$${fmtM(s.annDiv)}</td>
       <td style="font-family:var(--font)"><span class="bdg ${s.conf?'bdg-conf':'bdg-est'}">${s.exDiv}</span></td>
+      <td style="font-family:var(--font)">${s.payDate}</td>
     </tr>`).join('')+
     `<tr class="tr-total">
       <td style="font-family:var(--font)">合計</td><td>${fmtN(totalShares)}</td><td>—</td><td>—</td>
       <td class="${totalGain>=0?'pos':'neg'}" style="font-weight:500">${sgn(totalGain)}${fmtN(Math.round(totalGain/1000))}</td>
       <td class="${totalGain>=0?'pos':'neg'}">${pct(totalGain/TOTAL_COST)}</td>
       <td style="color:#0F7EA6">${pct(TOTAL_DIV/TOTAL_COST)}</td>
-      <td>$${fmtM(TOTAL_DIV)}</td><td>—</td>
+      <td>$${fmtM(TOTAL_DIV)}</td><td>—</td><td>—</td>
     </tr>`;
   document.querySelectorAll('thead th[data-col]').forEach(th=>{
     th.classList.remove('sa','sd');
