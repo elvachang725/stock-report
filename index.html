@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>特別股投資報告 — 2026.05</title>
+<title>轉投資 Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 :root{
   --navy:#0D1B3E;--gold:#C8972A;
@@ -20,210 +19,163 @@
   --font:'DM Sans',sans-serif;--mono:'DM Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:18px;line-height:1.7;-webkit-font-smoothing:antialiased}
-.page{max-width:1100px;margin:0 auto;padding:32px 28px 48px}
-.hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:24px}
-.hdr-title{font-size:24px;font-weight:500;color:var(--navy)}
-.hdr-meta{font-size:13px;color:var(--text3);font-family:var(--mono);text-align:right;line-height:1.8}
-.hdr-status{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:4px}
-.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.sec{font-size:14px;font-weight:500;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* ---------- 登入畫面 ---------- */
+.login-overlay{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px}
+.login-box{background:var(--surface);border-radius:14px;padding:36px 32px;width:100%;max-width:360px;text-align:left;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.login-logo-mark{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--navy),var(--blue));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.login-logo-mark span{width:14px;height:14px;border-radius:3px;background:var(--gold)}
+.login-title{font-size:17px;font-weight:500;color:var(--navy)}
+.login-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.login-label{font-size:12px;color:var(--text2);display:block;margin-bottom:6px}
+.login-input{width:100%;padding:11px 13px;font-size:15px;border:1px solid var(--border2);border-radius:8px;margin-bottom:14px;outline:none;font-family:var(--font)}
+.login-input:focus{border-color:var(--navy)}
+.login-btn{width:100%;padding:11px;font-size:15px;font-weight:500;color:#fff;background:var(--navy);border:none;border-radius:8px;cursor:pointer}
+.login-btn:hover{background:#162a54}
+.login-error{color:var(--red-dk);font-size:13px;margin-top:10px;display:none;text-align:center}
+.login-footer{margin-top:18px;font-size:11px;color:var(--text3);text-align:center;letter-spacing:.04em}
+
+/* ---------- 整體版面 ---------- */
+.page{max-width:1100px;margin:0 auto;padding:28px 24px 56px;display:none}
+.hdr{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:16px;border-bottom:1px solid var(--border);margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.hdr-title{font-size:23px;font-weight:500;color:var(--navy)}
+.hdr-sub{font-size:12px;color:var(--text3);margin-top:3px}
+.hdr-meta{font-size:12px;color:var(--text3);font-family:var(--mono);text-align:right;line-height:1.7}
+
+/* ---------- 頁籤 ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:24px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tab-btn{padding:10px 18px;font-size:14px;font-weight:500;color:var(--text2);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:var(--font);white-space:nowrap;transition:color .15s}
+.tab-btn:hover{color:var(--navy)}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+.sec{font-size:13px;font-weight:500;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .sec::after{content:'';flex:1;height:.5px;background:var(--border)}
 .mb18{margin-bottom:18px}.mb24{margin-bottom:24px}
+
+/* ---------- 總覽頁 KPI ---------- */
 .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.kpi{background:var(--surface);border-radius:8px;border:.5px solid var(--border);padding:14px 16px;position:relative;overflow:hidden}
+.kpi{background:var(--surface);border-radius:8px;border:.5px solid var(--border);padding:16px 18px;position:relative;overflow:hidden}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .kpi.c-navy::before{background:var(--navy)}.kpi.c-blue::before{background:var(--blue)}
 .kpi.c-green::before{background:var(--green)}.kpi.c-teal::before{background:var(--teal)}
-.kpi-l{font-size:15px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
-.kpi-v{font-size:34px;font-weight:500;line-height:1.1}.kpi-s{font-size:15px;color:var(--text2);margin-top:6px}
-.mom-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.mom-card{background:var(--surface);border-radius:8px;border:.5px solid var(--border);padding:14px 16px}
-.mom-l{font-size:15px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
-.mom-v{font-size:34px;font-weight:500;line-height:1.1}.mom-s{font-size:15px;color:var(--text2);margin-top:6px}
-.pill{display:inline-flex;align-items:center;gap:2px;padding:4px 10px;border-radius:20px;font-size:15px;font-weight:500;margin-top:6px}
-.pill-dn{background:var(--red-lt);color:var(--red-dk)}.pill-up{background:var(--green-lt);color:var(--green-dk)}
-.eff-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.eff-card{background:var(--surface);border-radius:10px;border:.5px solid var(--border);padding:16px 18px}
-.eff-l{font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
-.eff-v{font-size:38px;font-weight:500;margin-bottom:6px}
-.bar-wrap{height:4px;background:var(--border);border-radius:2px;margin:10px 0 6px;overflow:hidden}
-.bar{height:100%;border-radius:2px;transition:width .4s}.eff-n{font-size:16px;color:var(--text2);line-height:1.6}
-.month-tabs{display:flex;gap:6px;margin-bottom:10px}
-.mtab{padding:5px 14px;border-radius:6px;border:.5px solid var(--border);font-size:12px;cursor:pointer;background:transparent;color:var(--text2);font-family:var(--font);transition:all .15s}
-.mtab:hover{background:var(--bg)}.mtab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
-.div-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-.dc{border-radius:8px;padding:11px 13px;border:.5px solid var(--border)}
-.dc-tag{font-size:13px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
-.dc-name{font-size:16px;font-weight:500;color:var(--text);margin-bottom:4px}
-.dc-date{font-size:15px;font-family:var(--mono)}.dc-amt{font-size:15px;color:var(--text2);margin-top:4px}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:16px}
-thead th{font-size:13px;font-weight:500;color:var(--text3);text-align:right;padding:10px 11px;border-bottom:.5px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;text-transform:uppercase;letter-spacing:.04em}
-thead th:first-child{text-align:left}thead th:hover{color:var(--text)}
-thead th.sa::after{content:' ↑';color:var(--navy)}thead th.sd::after{content:' ↓';color:var(--navy)}
-tbody tr:hover{background:var(--bg)}
-tbody td{padding:13px 11px;text-align:right;border-bottom:.5px solid var(--border);color:var(--text);white-space:nowrap;font-family:var(--mono)}
-tbody td:first-child{text-align:left;font-family:var(--font)}
-.tr-total td{font-weight:500;background:#F0F4FA;border-top:.5px solid var(--border2)}
+.kpi-l{font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+.kpi-v{font-size:30px;font-weight:500;line-height:1.1}.kpi-s{font-size:12px;color:var(--text2);margin-top:6px}
+
+.breakdown-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.bd-card{background:var(--surface);border-radius:10px;border:.5px solid var(--border);padding:18px 20px}
+.bd-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.bd-name{font-size:15px;font-weight:500;color:var(--navy)}
+.bd-link{font-size:12px;color:var(--blue);cursor:pointer;text-decoration:none;font-family:var(--font)}
+.bd-link:hover{text-decoration:underline}
+.bd-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:.5px solid var(--border);font-size:13px}
+.bd-row:last-child{border-bottom:none}
+.bd-row .l{color:var(--text2)}
+.bd-row .v{font-family:var(--mono);font-weight:500}
+
 .pos{color:var(--green)}.neg{color:var(--red)}
 .bdg{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;white-space:nowrap;font-family:var(--font)}
-.bdg-conf{background:#D1FAE5;color:#065F46}.bdg-est{background:var(--amber-lt);color:var(--amber-dk)}
-.ac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.ac{border-radius:10px;border:.5px solid var(--border);background:var(--surface);overflow:hidden}
-.ac-head{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:.5px solid var(--border);background:var(--bg)}
-.ac-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
-.ac-title{font-size:16px;font-weight:500;color:var(--text)}
-.ac-row{display:flex;align-items:flex-start;gap:9px;padding:8px 14px;border-bottom:.5px solid var(--border)}
-.ac-row:last-child{border-bottom:none}
-.ac-dot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0}
-.ac-name{font-size:16px;font-weight:500;color:var(--text);margin-bottom:2px}
-.ac-tag{font-size:10px;color:var(--text3);margin-left:4px;font-weight:400}
-.ac-note{font-size:15px;color:var(--text2);line-height:1.5}
-.loading-banner{background:var(--blue-lt);border:.5px solid var(--blue);border-radius:8px;padding:12px 18px;font-size:15px;color:var(--blue);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.error-banner{background:var(--red-lt);border:.5px solid var(--red);border-radius:8px;padding:12px 18px;font-size:15px;color:var(--red-dk);margin-bottom:16px;display:none}
-@media(max-width:800px){.kpi-row,.mom-row,.eff-row{grid-template-columns:1fr 1fr}.div-row{grid-template-columns:repeat(2,1fr)}.ac-grid{grid-template-columns:1fr}}
+.bdg-live{background:var(--green-lt);color:var(--green-dk)}
+.bdg-stale{background:var(--amber-lt);color:var(--amber-dk)}
+
 footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);border-top:.5px solid var(--border);margin-top:32px}
+
+@media(max-width:800px){
+  .kpi-row{grid-template-columns:1fr 1fr}
+  .breakdown-row{grid-template-columns:1fr}
+}
+
+/* ===================================================================
+   以下為兩個原始報告各自的樣式（保留原設計，置於各自 tab-panel 內）
+=================================================================== */
+
+/* ---- 7839 持股報告樣式 ---- */
+#panel-7839 .card7839{background:#fff;border:1px solid #e3e0d8;border-radius:10px;padding:14px 16px}
+#panel-7839 .grid7839{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+#panel-7839 .card7839 .label{font-size:12px;color:#6b6862;margin-bottom:4px}
+#panel-7839 .card7839 .value{font-size:21px;font-weight:600}
+#panel-7839 .card7839 .sub{font-size:12px;margin-top:3px;color:#6b6862}
+#panel-7839 .card7839.pos{background:#e1f5ee}
+#panel-7839 .card7839.pos .value,#panel-7839 .card7839.pos .sub{color:#0f6e56}
+#panel-7839 .card7839.neg{background:#fcebeb}
+#panel-7839 .card7839.neg .value,#panel-7839 .card7839.neg .sub{color:#a32d2d}
+#panel-7839 .card7839.warn{background:#faeeda}
+#panel-7839 .card7839.warn .value,#panel-7839 .card7839.warn .sub{color:#854f0b}
+#panel-7839 .controls7839{display:flex;align-items:center;gap:8px;margin:4px 0 16px}
+#panel-7839 .controls7839 label{font-size:13px;color:#6b6862}
+#panel-7839 .controls7839 select{padding:7px 10px;border:1px solid #e3e0d8;border-radius:8px;font-size:14px;background:#fff}
+#panel-7839 table.tbl7839{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border:1px solid #e3e0d8;border-radius:10px;overflow:hidden}
+#panel-7839 table.tbl7839 th,#panel-7839 table.tbl7839 td{padding:9px 10px;text-align:right;border-bottom:1px solid #e3e0d8}
+#panel-7839 table.tbl7839 th:first-child,#panel-7839 table.tbl7839 td:first-child{text-align:left}
+#panel-7839 table.tbl7839 th{color:#6b6862;font-weight:600;background:#faf9f6}
+#panel-7839 table.tbl7839 tr:last-child td{border-bottom:none}
+#panel-7839 #status7839{font-size:12px;color:#6b6862;margin-bottom:14px}
+
+/* ---- 特別股投資報告樣式 ---- */
+#panel-pref .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+#panel-pref .mom-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+#panel-pref .mom-card{background:var(--surface);border-radius:8px;border:.5px solid var(--border);padding:14px 16px}
+#panel-pref .mom-l{font-size:12px;color:var(--text3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em}
+#panel-pref .mom-v{font-size:28px;font-weight:500;line-height:1.1}.mom-s{font-size:12px;color:var(--text2);margin-top:6px}
+#panel-pref .pill{display:inline-flex;align-items:center;gap:2px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;margin-top:6px}
+#panel-pref .pill-dn{background:var(--red-lt);color:var(--red-dk)}#panel-pref .pill-up{background:var(--green-lt);color:var(--green-dk)}
+#panel-pref .eff-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#panel-pref .eff-card{background:var(--surface);border-radius:10px;border:.5px solid var(--border);padding:16px 18px}
+#panel-pref .eff-l{font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+#panel-pref .eff-v{font-size:32px;font-weight:500;margin-bottom:6px}
+#panel-pref .bar-wrap{height:4px;background:var(--border);border-radius:2px;margin:10px 0 6px;overflow:hidden}
+#panel-pref .bar{height:100%;border-radius:2px;transition:width .4s}#panel-pref .eff-n{font-size:13px;color:var(--text2);line-height:1.6}
+#panel-pref .month-tabs{display:flex;gap:6px;margin-bottom:10px}
+#panel-pref .mtab{padding:5px 14px;border-radius:6px;border:.5px solid var(--border);font-size:12px;cursor:pointer;background:transparent;color:var(--text2);font-family:var(--font);transition:all .15s}
+#panel-pref .mtab:hover{background:var(--bg)}#panel-pref .mtab.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+#panel-pref .div-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+#panel-pref .dc{border-radius:8px;padding:11px 13px;border:.5px solid var(--border)}
+#panel-pref .dc-tag{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+#panel-pref .dc-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px}
+#panel-pref .dc-date{font-size:12px;font-family:var(--mono)}#panel-pref .dc-amt{font-size:11px;color:var(--text2);margin-top:4px}
+#panel-pref .tbl-wrap{overflow-x:auto}
+#panel-pref table.tblpref{width:100%;border-collapse:collapse;font-size:13px}
+#panel-pref table.tblpref thead th{font-size:11px;font-weight:500;color:var(--text3);text-align:right;padding:10px 11px;border-bottom:.5px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;text-transform:uppercase;letter-spacing:.04em}
+#panel-pref table.tblpref thead th:first-child{text-align:left}#panel-pref table.tblpref thead th:hover{color:var(--text)}
+#panel-pref table.tblpref thead th.sa::after{content:' ↑';color:var(--navy)}#panel-pref table.tblpref thead th.sd::after{content:' ↓';color:var(--navy)}
+#panel-pref table.tblpref tbody tr:hover{background:var(--bg)}
+#panel-pref table.tblpref tbody td{padding:11px 11px;text-align:right;border-bottom:.5px solid var(--border);color:var(--text);white-space:nowrap;font-family:var(--mono)}
+#panel-pref table.tblpref tbody td:first-child{text-align:left;font-family:var(--font)}
+#panel-pref .tr-total td{font-weight:500;background:#F0F4FA;border-top:.5px solid var(--border2)}
+#panel-pref .bdg2{display:inline-flex;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:500;white-space:nowrap;font-family:var(--font)}
+#panel-pref .bdg-conf{background:#D1FAE5;color:#065F46}#panel-pref .bdg-est{background:var(--amber-lt);color:var(--amber-dk)}
+#panel-pref .ac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+#panel-pref .ac{border-radius:10px;border:.5px solid var(--border);background:var(--surface);overflow:hidden}
+#panel-pref .ac-head{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:.5px solid var(--border);background:var(--bg)}
+#panel-pref .ac-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+#panel-pref .ac-title{font-size:13px;font-weight:500;color:var(--text)}
+#panel-pref .ac-row{display:flex;align-items:flex-start;gap:9px;padding:8px 14px;border-bottom:.5px solid var(--border)}
+#panel-pref .ac-row:last-child{border-bottom:none}
+#panel-pref .ac-dot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0}
+#panel-pref .ac-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+#panel-pref .ac-tag{font-size:10px;color:var(--text3);margin-left:4px;font-weight:400}
+#panel-pref .ac-note{font-size:12px;color:var(--text2);line-height:1.5}
+#panel-pref .loading-banner{background:var(--blue-lt);border:.5px solid var(--blue);border-radius:8px;padding:12px 18px;font-size:13px;color:var(--blue);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+#panel-pref .error-banner{background:var(--red-lt);border:.5px solid var(--red);border-radius:8px;padding:12px 18px;font-size:13px;color:var(--red-dk);margin-bottom:16px;display:none}
+@media(max-width:800px){
+  #panel-pref .kpi-row,#panel-pref .mom-row,#panel-pref .eff-row{grid-template-columns:1fr 1fr}
+  #panel-pref .div-row{grid-template-columns:repeat(2,1fr)}
+  #panel-pref .ac-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
-<div class="page">
 
-  <div class="hdr">
-    <div>
-      <div class="hdr-title">特別股投資報告</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:3px;font-family:var(--mono)">12 檔持股　｜　公司內部使用</div>
-    </div>
-    <div class="hdr-meta">
-      <div id="hdr-date">載入中...</div>
-      <div class="hdr-status">
-        <div class="status-dot" id="status-dot" style="background:var(--text3)"></div>
-        <span id="status-text">正在抓取最新收盤價...</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="loading-banner" id="loading-banner">正在從 Google Sheets 抓取最新收盤價，請稍候...</div>
-  <div class="error-banner" id="error-banner">無法取得最新收盤價，顯示上次已知數據。</div>
-
-  <div class="sec mb18">總覽</div>
-  <div class="kpi-row" style="margin-bottom:10px">
-    <div class="kpi c-navy"><div class="kpi-l">總投入成本</div><div class="kpi-v">$2.000 億</div><div class="kpi-s">新台幣</div></div>
-    <div class="kpi c-blue"><div class="kpi-l">目前市值</div><div class="kpi-v" id="kpi-mkt" style="color:var(--blue)">—</div><div class="kpi-s">新台幣</div></div>
-    <div class="kpi c-green"><div class="kpi-l">未實現利得</div><div class="kpi-v" id="kpi-gain">—</div><div class="kpi-s" id="kpi-gain-pct"></div></div>
-    <div class="kpi c-teal"><div class="kpi-l">年化總報酬率</div><div class="kpi-v" id="kpi-ret" style="color:var(--teal)">—</div><div class="kpi-s" id="kpi-ret-sub"></div></div>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;margin-bottom:24px">
-    <div class="kpi" style="border-left:4px solid var(--red)">
-      <div class="kpi-l">未實現利得率</div>
-      <div class="kpi-v" id="kpi-gainpct2" style="font-size:38px">—</div>
-      <div class="kpi-s">相對總投入成本</div>
-    </div>
-    <div class="kpi" style="border-left:4px solid var(--teal)">
-      <div class="kpi-l">組合平均殖利率</div>
-      <div class="kpi-v" style="font-size:38px;color:var(--teal)">4.29%</div>
-      <div class="kpi-s">以投入成本計算</div>
-    </div>
-    <div class="kpi" style="border-left:4px solid var(--green)">
-      <div class="kpi-l">預估年領股利</div>
-      <div class="kpi-v" style="font-size:38px;color:var(--green)">$8.58M</div>
-      <div class="kpi-s">每月約 $71.5 萬入帳</div>
-    </div>
-  </div>
-
-  <div class="sec mb18">歷史利得查詢　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">選擇日期查看當天帳面利得</span></div>
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
-    <div style="display:flex;align-items:center;gap:8px">
-      <label style="font-size:14px;color:var(--text2)">查詢日期</label>
-      <select id="date-select" style="padding:7px 12px;border:.5px solid var(--border2);border-radius:7px;font-size:15px;font-family:var(--font);color:var(--text);background:var(--surface);cursor:pointer;outline:none">
-        <option value="">— 載入中 —</option>
-      </select>
-    </div>
-    <div style="display:flex;gap:6px">
-      <button class="mtab active" data-prev="sel">對比選取日</button>
-      <button class="mtab" data-prev="430">對比 4/30</button>
-      <button class="mtab" data-prev="529">對比 5/29</button>
-    </div>
-  </div>
-  <div class="mom-row" style="margin-bottom:8px">
-    <div class="mom-card"><div class="mom-l" id="mom-prev-label">4/30　帳面利得</div><div class="mom-v" id="mom-prev-val">—</div><div class="mom-s" id="mom-prev-pct"></div></div>
-    <div class="mom-card"><div class="mom-l">目前　帳面利得</div><div class="mom-v" id="mom-curr-val">—</div><div class="mom-s" id="mom-curr-pct"></div></div>
-    <div class="mom-card"><div class="mom-l">變化</div><div class="mom-v" id="mom-delta">—</div><div id="mom-pill"></div></div>
-  </div>
-  <div id="mom-note" style="font-size:11px;color:var(--text3);margin-bottom:24px;padding-left:2px"></div>
-
-  <div class="sec mb18">資金效率</div>
-  <div class="eff-row mb24">
-    <div class="eff-card">
-      <div class="eff-l">年化總報酬率（股利＋利得）</div>
-      <div class="eff-v" id="eff-ret" style="color:var(--green)">—</div>
-      <div class="bar-wrap"><div class="bar" id="eff-ret-bar" style="background:var(--green)"></div></div>
-      <div class="eff-n" id="eff-ret-note"></div>
-    </div>
-    <div class="eff-card">
-      <div class="eff-l">每月穩定股利收入（預估）</div>
-      <div class="eff-v" style="color:var(--blue)">$71.5 萬</div>
-      <div class="bar-wrap"><div class="bar" style="width:68%;background:var(--blue)"></div></div>
-      <div class="eff-n">全年 $8.58M ÷ 12 個月<br><span style="color:var(--text3)">7–9 月除息，下半年集中入帳</span></div>
-    </div>
-  </div>
-
-  <div class="sec mb18">持股明細　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">點擊欄位排序</span></div>
-  <div class="tbl-wrap mb24">
-    <table>
-      <thead><tr>
-        <th data-col="name" style="text-align:left">代碼</th>
-        <th data-col="shares">股數</th>
-        <th data-col="avgCost">均價</th>
-        <th data-col="close">收盤</th>
-        <th data-col="gain">利得（千）</th>
-        <th data-col="gainPct">利得率</th>
-        <th data-col="divY">殖利率</th>
-        <th data-col="totalReturn">總報酬率</th>
-        <th data-col="annDiv">預估年息</th>
-        <th data-col="exDiv">除息日</th>
-        <th data-col="payDate">發放日</th>
-      </tr></thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-
-  <div class="sec mb18">除息日　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">資料來源：Google Sheets，有新確認日期時請更新試算表</span></div>
-  <div class="div-row mb24" id="exdiv-row">
-    <div class="dc" style="color:var(--text3);font-size:13px;padding:14px">載入中...</div>
-  </div>
-
-  <div class="sec mb18">建議操作</div>
-  <div class="ac-grid">
-    <div class="ac">
-      <div class="ac-head"><div class="ac-icon" style="background:var(--blue-lt)">⚖</div><span class="ac-title">調整比重</span></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">中信丙特 <span class="ac-tag">減碼</span></div><div class="ac-note">殖利率僅 3.09%，低於均值 1.2%，建議降至 1.5% 以下</div></div></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--amber)"></div><div><div class="ac-name">國泰乙特 <span class="ac-tag">觀察</span></div><div class="ac-note">殖利率 3.75%，除息後視填息狀況再決定</div></div></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">聯邦銀甲特 <span class="ac-tag">可加碼</span></div><div class="ac-note">殖利率最高 4.82%，帳損輕微，回檔可加</div></div></div>
-    </div>
-    <div class="ac">
-      <div class="ac-head"><div class="ac-icon" style="background:var(--green-lt)">📅</div><span class="ac-title">除息前後時機</span></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag" style="color:var(--green-dk)">7/11 確認</span></div><div class="ac-note">帳損，除息前勿賣，領息後追蹤填息進度</div></div></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--amber)"></div><div><div class="ac-name">台新戊特 / 聯邦銀 <span class="ac-tag" style="color:var(--amber)">7 月預估</span></div><div class="ac-note">帳損除息後可大幅彌補，除息前維持持倉</div></div></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">和潤 / 裕融 <span class="ac-tag">9 月預估</span></div><div class="ac-note">9 月前持有，除息後視報酬決定去留</div></div></div>
-    </div>
-    <div class="ac">
-      <div class="ac-head"><div class="ac-icon" style="background:var(--amber-lt)">🛡</div><span class="ac-title">停損 / 停利</span></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag">停損 $41.5</span></div><div class="ac-note">距停損尚有緩衝，除息前安全</div></div></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">中信乙特 <span class="ac-tag">停利 $65.8</span></div><div class="ac-note">現價接近停利，可備限價單</div></div></div>
-      <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">富邦乙特 <span class="ac-tag">停利 $64.3</span></div><div class="ac-note">帳利最大，持續關注</div></div></div>
-    </div>
-  </div>
-
-  <footer>特別股投資報告　公司內部使用　｜　收盤價資料來源：Google Finance（延遲最多 20 分鐘）</footer>
-</div>
-
+<!-- ============ 登入畫面 ============ -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-box">
     <div class="login-logo">
       <div class="login-logo-mark"><span></span></div>
       <div>
-        <div class="login-title">特別股投資報告</div>
+        <div class="login-title">轉投資 Dashboard</div>
         <div class="login-sub">公司內部使用，請輸入密碼</div>
       </div>
     </div>
@@ -235,7 +187,411 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
   </div>
 </div>
 
+<!-- ============ 主畫面 ============ -->
+<div class="page" id="app">
+
+  <div class="hdr">
+    <div>
+      <div class="hdr-title">轉投資 Dashboard</div>
+      <div class="hdr-sub">達人網(7839) ＋ 特別股投資組合　｜　公司內部使用</div>
+    </div>
+    <div class="hdr-meta">
+      <div id="hdr-date">載入中...</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">總覽</button>
+    <button class="tab-btn" data-tab="7839">達人網 7839</button>
+    <button class="tab-btn" data-tab="pref">特別股投資</button>
+  </div>
+
+  <!-- ============ 總覽頁 ============ -->
+  <div class="tab-panel active" id="panel-overview">
+    <div class="sec mb18">轉投資總覽</div>
+    <div class="kpi-row mb24">
+      <div class="kpi c-navy">
+        <div class="kpi-l">總投入成本</div>
+        <div class="kpi-v" id="ov-cost">—</div>
+        <div class="kpi-s">兩組投資合計</div>
+      </div>
+      <div class="kpi c-blue">
+        <div class="kpi-l">目前總市值</div>
+        <div class="kpi-v" id="ov-mkt" style="color:var(--blue)">—</div>
+        <div class="kpi-s" id="ov-mkt-sub"></div>
+      </div>
+      <div class="kpi c-green">
+        <div class="kpi-l">未實現總利得</div>
+        <div class="kpi-v" id="ov-gain">—</div>
+        <div class="kpi-s" id="ov-gain-pct"></div>
+      </div>
+      <div class="kpi c-teal">
+        <div class="kpi-l">綜合報酬率</div>
+        <div class="kpi-v" id="ov-ret" style="color:var(--teal)">—</div>
+        <div class="kpi-s" id="ov-ret-sub">利得＋股利／總成本</div>
+      </div>
+    </div>
+
+    <div class="sec mb18">各帳戶明細</div>
+    <div class="breakdown-row mb24">
+      <div class="bd-card">
+        <div class="bd-head">
+          <div class="bd-name">📈 達人網 (7839)</div>
+          <a class="bd-link" data-goto="7839">查看明細 →</a>
+        </div>
+        <div class="bd-row"><span class="l">累計成本</span><span class="v" id="bd7839-cost">—</span></div>
+        <div class="bd-row"><span class="l">目前市值</span><span class="v" id="bd7839-mkt">—</span></div>
+        <div class="bd-row"><span class="l">未實現利得</span><span class="v" id="bd7839-gain">—</span></div>
+        <div class="bd-row"><span class="l">股價狀態</span><span class="v" id="bd7839-status">—</span></div>
+      </div>
+      <div class="bd-card">
+        <div class="bd-head">
+          <div class="bd-name">🏦 特別股投資（12 檔）</div>
+          <a class="bd-link" data-goto="pref">查看明細 →</a>
+        </div>
+        <div class="bd-row"><span class="l">總投入成本</span><span class="v" id="bdpref-cost">—</span></div>
+        <div class="bd-row"><span class="l">目前市值</span><span class="v" id="bdpref-mkt">—</span></div>
+        <div class="bd-row"><span class="l">未實現利得</span><span class="v" id="bdpref-gain">—</span></div>
+        <div class="bd-row"><span class="l">組合殖利率</span><span class="v" id="bdpref-yield">—</span></div>
+      </div>
+    </div>
+
+    <footer>轉投資 Dashboard　公司內部使用　｜　資料來源：Google Sheets / Google Finance（延遲最多 20 分鐘），僅供內部參考</footer>
+  </div>
+
+  <!-- ============ 7839 頁籤 ============ -->
+  <div class="tab-panel" id="panel-7839">
+    <div class="sec mb18">達人網 (7839) 持股報告</div>
+    <div id="status7839">載入中...</div>
+
+    <div class="controls7839">
+      <label for="dateSel7839">交易日期</label>
+      <select id="dateSel7839"></select>
+    </div>
+
+    <div class="grid7839" id="topMetrics7839"></div>
+    <div class="grid7839" id="gainMetrics7839" style="margin-bottom:24px"></div>
+    <table class="tbl7839" id="lotsTable7839">
+      <thead><tr><th>買進單價</th><th>股數</th><th>手續費</th><th>總成本</th><th>當日損益</th></tr></thead>
+      <tbody id="lotsBody7839"></tbody>
+    </table>
+
+    <footer>收盤價／成交量資料來源：Google Sheets ｜ 僅供內部參考，非即時報價</footer>
+  </div>
+
+  <!-- ============ 特別股頁籤 ============ -->
+  <div class="tab-panel" id="panel-pref">
+    <div class="loading-banner" id="loading-banner">正在從 Google Sheets 抓取最新收盤價，請稍候...</div>
+    <div class="error-banner" id="error-banner">無法取得最新收盤價，顯示上次已知數據。</div>
+
+    <div class="sec mb18">特別股 總覽</div>
+    <div class="kpi-row" style="margin-bottom:10px">
+      <div class="kpi c-navy"><div class="kpi-l">總投入成本</div><div class="kpi-v">$2.000 億</div><div class="kpi-s">新台幣</div></div>
+      <div class="kpi c-blue"><div class="kpi-l">目前市值</div><div class="kpi-v" id="kpi-mkt" style="color:var(--blue)">—</div><div class="kpi-s">新台幣</div></div>
+      <div class="kpi c-green"><div class="kpi-l">未實現利得</div><div class="kpi-v" id="kpi-gain">—</div><div class="kpi-s" id="kpi-gain-pct"></div></div>
+      <div class="kpi c-teal"><div class="kpi-l">年化總報酬率</div><div class="kpi-v" id="kpi-ret" style="color:var(--teal)">—</div><div class="kpi-s" id="kpi-ret-sub"></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;margin-bottom:24px">
+      <div class="kpi" style="border-left:4px solid var(--red)">
+        <div class="kpi-l">未實現利得率</div>
+        <div class="kpi-v" id="kpi-gainpct2" style="font-size:32px">—</div>
+        <div class="kpi-s">相對總投入成本</div>
+      </div>
+      <div class="kpi" style="border-left:4px solid var(--teal)">
+        <div class="kpi-l">組合平均殖利率</div>
+        <div class="kpi-v" style="font-size:32px;color:var(--teal)">4.29%</div>
+        <div class="kpi-s">以投入成本計算</div>
+      </div>
+      <div class="kpi" style="border-left:4px solid var(--green)">
+        <div class="kpi-l">預估年領股利</div>
+        <div class="kpi-v" style="font-size:32px;color:var(--green)">$8.58M</div>
+        <div class="kpi-s">每月約 $71.5 萬入帳</div>
+      </div>
+    </div>
+
+    <div class="sec mb18">歷史利得查詢　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">選擇日期查看當天帳面利得</span></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <label style="font-size:13px;color:var(--text2)">查詢日期</label>
+        <select id="date-select" style="padding:7px 12px;border:.5px solid var(--border2);border-radius:7px;font-size:14px;font-family:var(--font);color:var(--text);background:var(--surface);cursor:pointer;outline:none">
+          <option value="">— 載入中 —</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="mtab active" data-prev="sel">對比選取日</button>
+        <button class="mtab" data-prev="430">對比 4/30</button>
+        <button class="mtab" data-prev="529">對比 5/29</button>
+      </div>
+    </div>
+    <div class="mom-row" style="margin-bottom:8px">
+      <div class="mom-card"><div class="mom-l" id="mom-prev-label">4/30　帳面利得</div><div class="mom-v" id="mom-prev-val">—</div><div class="mom-s" id="mom-prev-pct"></div></div>
+      <div class="mom-card"><div class="mom-l">目前　帳面利得</div><div class="mom-v" id="mom-curr-val">—</div><div class="mom-s" id="mom-curr-pct"></div></div>
+      <div class="mom-card"><div class="mom-l">變化</div><div class="mom-v" id="mom-delta">—</div><div id="mom-pill"></div></div>
+    </div>
+    <div id="mom-note" style="font-size:11px;color:var(--text3);margin-bottom:24px;padding-left:2px"></div>
+
+    <div class="sec mb18">資金效率</div>
+    <div class="eff-row mb24">
+      <div class="eff-card">
+        <div class="eff-l">年化總報酬率（股利＋利得）</div>
+        <div class="eff-v" id="eff-ret" style="color:var(--green)">—</div>
+        <div class="bar-wrap"><div class="bar" id="eff-ret-bar" style="background:var(--green)"></div></div>
+        <div class="eff-n" id="eff-ret-note"></div>
+      </div>
+      <div class="eff-card">
+        <div class="eff-l">每月穩定股利收入（預估）</div>
+        <div class="eff-v" style="color:var(--blue)">$71.5 萬</div>
+        <div class="bar-wrap"><div class="bar" style="width:68%;background:var(--blue)"></div></div>
+        <div class="eff-n">全年 $8.58M ÷ 12 個月<br><span style="color:var(--text3)">7–9 月除息，下半年集中入帳</span></div>
+      </div>
+    </div>
+
+    <div class="sec mb18">持股明細　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">點擊欄位排序</span></div>
+    <div class="tbl-wrap mb24">
+      <table class="tblpref">
+        <thead><tr>
+          <th data-col="name" style="text-align:left">代碼</th>
+          <th data-col="shares">股數</th>
+          <th data-col="avgCost">均價</th>
+          <th data-col="close">收盤</th>
+          <th data-col="gain">利得（千）</th>
+          <th data-col="gainPct">利得率</th>
+          <th data-col="divY">殖利率</th>
+          <th data-col="totalReturn">總報酬率</th>
+          <th data-col="annDiv">預估年息</th>
+          <th data-col="exDiv">除息日</th>
+          <th data-col="payDate">發放日</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="sec mb18">除息日　<span style="font-weight:400;font-size:10px;letter-spacing:0;text-transform:none;color:var(--text3)">資料來源：Google Sheets，有新確認日期時請更新試算表</span></div>
+    <div class="div-row mb24" id="exdiv-row">
+      <div class="dc" style="color:var(--text3);font-size:13px;padding:14px">載入中...</div>
+    </div>
+
+    <div class="sec mb18">建議操作</div>
+    <div class="ac-grid">
+      <div class="ac">
+        <div class="ac-head"><div class="ac-icon" style="background:var(--blue-lt)">⚖</div><span class="ac-title">調整比重</span></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">中信丙特 <span class="ac-tag">減碼</span></div><div class="ac-note">殖利率僅 3.09%，低於均值 1.2%，建議降至 1.5% 以下</div></div></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--amber)"></div><div><div class="ac-name">國泰乙特 <span class="ac-tag">觀察</span></div><div class="ac-note">殖利率 3.75%，除息後視填息狀況再決定</div></div></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">聯邦銀甲特 <span class="ac-tag">可加碼</span></div><div class="ac-note">殖利率最高 4.82%，帳損輕微，回檔可加</div></div></div>
+      </div>
+      <div class="ac">
+        <div class="ac-head"><div class="ac-icon" style="background:var(--green-lt)">📅</div><span class="ac-title">除息前後時機</span></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag" style="color:var(--green-dk)">7/11 確認</span></div><div class="ac-note">帳損，除息前勿賣，領息後追蹤填息進度</div></div></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--amber)"></div><div><div class="ac-name">台新戊特 / 聯邦銀 <span class="ac-tag" style="color:var(--amber)">7 月預估</span></div><div class="ac-note">帳損除息後可大幅彌補，除息前維持持倉</div></div></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">和潤 / 裕融 <span class="ac-tag">9 月預估</span></div><div class="ac-note">9 月前持有，除息後視報酬決定去留</div></div></div>
+      </div>
+      <div class="ac">
+        <div class="ac-head"><div class="ac-icon" style="background:var(--amber-lt)">🛡</div><span class="ac-title">停損 / 停利</span></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag">停損 $41.5</span></div><div class="ac-note">距停損尚有緩衝，除息前安全</div></div></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">中信乙特 <span class="ac-tag">停利 $65.8</span></div><div class="ac-note">現價接近停利，可備限價單</div></div></div>
+        <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">富邦乙特 <span class="ac-tag">停利 $64.3</span></div><div class="ac-note">帳利最大，持續關注</div></div></div>
+      </div>
+    </div>
+
+    <footer>特別股投資報告　公司內部使用　｜　收盤價資料來源：Google Finance（延遲最多 20 分鐘）</footer>
+  </div>
+
+</div>
+
 <script>
+/* =====================================================================
+   登入區（兩個帳戶合併後僅需一組密碼）
+   修改方式：把下面 SITE_PASSWORD 改成你想要的密碼即可
+===================================================================== */
+const SITE_PASSWORD = "stock2026";
+const PASS_KEY = 'dashboard_auth_v1';
+
+function checkAuth(){
+  return sessionStorage.getItem(PASS_KEY) === SITE_PASSWORD;
+}
+function tryLogin(){
+  const pw = document.getElementById('pwInput').value;
+  if(pw === SITE_PASSWORD){
+    sessionStorage.setItem(PASS_KEY, SITE_PASSWORD);
+    enterApp();
+  } else {
+    document.getElementById('pwError').style.display='block';
+    document.getElementById('pwInput').value='';
+    document.getElementById('pwInput').focus();
+  }
+}
+function enterApp(){
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('hdr-date').textContent = new Date().toLocaleString('zh-TW');
+  initAll();
+}
+document.getElementById('pwBtn').addEventListener('click', tryLogin);
+document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
+if(checkAuth()){ enterApp(); } else { setTimeout(()=>document.getElementById('pwInput').focus(),100); }
+
+/* =====================================================================
+   頁籤切換
+===================================================================== */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+document.querySelectorAll('[data-goto]').forEach(el=>{
+  el.addEventListener('click', ()=> switchTab(el.dataset.goto));
+});
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+function initAll(){
+  init7839();
+  initPref();
+}
+
+/* =====================================================================
+   ① 達人網 (7839) 邏輯 — 取自原 7839 報告，欄位/變數加 7839 後綴避免衝突
+===================================================================== */
+const SHEET_CSV_URL_7839 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSe1KrKnHUTcrc2OuXKHT00UKQVe40NdUHI0wErgYI_IqEY9S539Ockm2L9mRNcZZ-qUDH6IWbkY2oM/pub?gid=0&single=true&output=csv";
+const LIVE_PRICE_CSV_URL_7839 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSe1KrKnHUTcrc2OuXKHT00UKQVe40NdUHI0wErgYI_IqEY9S539Ockm2L9mRNcZZ-qUDH6IWbkY2oM/pub?gid=783974389&single=true&output=csv";
+const DIVIDEND_PER_SHARE_7839 = 2.03529174;
+
+function parseCSVLine(line){
+  const result = [];
+  let cur = '';
+  let inQuotes = false;
+  for(let i = 0; i < line.length; i++){
+    const c = line[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(line[i+1] === '"'){ cur += '"'; i++; }
+        else { inQuotes = false; }
+      } else { cur += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ result.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+  }
+  result.push(cur);
+  return result;
+}
+function parseCSV(text){ return text.trim().split(/\r?\n/).map(parseCSVLine); }
+function toNum(s){ return parseFloat(String(s).replace(/,/g,'')); }
+function fmt(n){ return Math.round(n).toLocaleString('en-US'); }
+
+let records7839 = [];
+let livePrice7839 = null;
+
+// 暴露給總覽頁讀取的彙總結果
+window.summary7839 = { cost:0, mkt:0, gain:0, live:false };
+
+async function fetchLivePrice7839(){
+  try{
+    const res = await fetch(LIVE_PRICE_CSV_URL_7839, {cache:'no-store'});
+    if(!res.ok) return null;
+    const rows = parseCSV(await res.text());
+    const v = toNum(rows[0] && rows[0][0]);
+    return isNaN(v) ? null : v;
+  } catch(err){ return null; }
+}
+
+async function init7839(){
+  const statusEl = document.getElementById('status7839');
+  try{
+    const [res, live] = await Promise.all([
+      fetch(SHEET_CSV_URL_7839, {cache:'no-store'}),
+      fetchLivePrice7839()
+    ]);
+    livePrice7839 = live;
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const rows = parseCSV(await res.text()).slice(1).filter(r => r.length >= 6 && r[0]);
+    const byDate = {};
+    rows.forEach(function(r){
+      const date = r[0];
+      if(!byDate[date]) byDate[date] = {date:date, lots:[], closePrice:toNum(r[4]), volume:toNum(r[5])};
+      byDate[date].lots.push({price:toNum(r[1]), qty:toNum(r[2]), fee:toNum(r[3])});
+    });
+    records7839 = Object.keys(byDate).sort().map(function(d){ return byDate[d]; });
+    if(records7839.length === 0) throw new Error('沒有讀到資料列');
+    statusEl.textContent = '資料更新時間：' + new Date().toLocaleString('zh-TW') + (livePrice7839 ? '　即時股價：$' + livePrice7839.toFixed(2) : '　（即時股價暫時讀不到，已改用手動填的收盤價）');
+    buildDateSelect7839();
+  } catch(err){
+    statusEl.textContent = '讀取 Google Sheets 失敗（' + err.message + '），請確認 SHEET_CSV_URL 是否已正確發佈為 CSV';
+    document.getElementById('bd7839-status').textContent = '讀取失敗';
+  }
+}
+
+function buildDateSelect7839(){
+  const sel = document.getElementById('dateSel7839');
+  sel.innerHTML = '';
+  records7839.forEach(function(r, i){
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = r.date;
+    sel.appendChild(opt);
+  });
+  sel.value = records7839.length - 1;
+  sel.addEventListener('change', function(){ render7839(parseInt(sel.value)); });
+  render7839(records7839.length - 1);
+}
+
+function render7839(idx){
+  let shares = 0, cost = 0;
+  for(let i = 0; i <= idx; i++){
+    records7839[i].lots.forEach(function(l){ shares += l.qty; cost += l.price * l.qty + l.fee; });
+  }
+  const isLatest = idx === records7839.length - 1;
+  const useLive = isLatest && livePrice7839 !== null;
+  const close = useLive ? livePrice7839 : records7839[idx].closePrice;
+  const priceTag = useLive
+    ? '<span style="font-size:11px; color:var(--green-dk); background:var(--green-lt); padding:2px 8px; border-radius:6px; margin-left:6px;">即時</span>'
+    : '<span style="font-size:11px; color:#6b6862; background:#f6f5f2; padding:2px 8px; border-radius:6px; margin-left:6px;">收盤</span>';
+  const avgCost = cost / shares;
+  const marketValue = shares * close;
+  const gain = marketValue - cost;
+  const gainPct = gain / cost * 100;
+  const divTotal = shares * DIVIDEND_PER_SHARE_7839;
+  const potential = gain + divTotal;
+  const potentialPct = potential / cost * 100;
+  const gainCls = gain >= 0 ? 'pos' : 'neg';
+
+  document.getElementById('topMetrics7839').innerHTML =
+    '<div class="card7839"><div class="label">累計持股</div><div class="value">' + fmt(shares) + ' 股</div></div>' +
+    '<div class="card7839"><div class="label">累計成本</div><div class="value">$' + fmt(cost) + '</div></div>' +
+    '<div class="card7839"><div class="label">平均成本</div><div class="value">$' + avgCost.toFixed(2) + '</div></div>' +
+    '<div class="card7839"><div class="label">當日收盤價</div><div class="value">$' + close.toFixed(2) + priceTag + '</div></div>';
+
+  document.getElementById('gainMetrics7839').innerHTML =
+    '<div class="card7839 ' + gainCls + '"><div class="label">即時利得</div><div class="value">' + (gain>=0?'+':'') + '$' + fmt(gain) + '</div><div class="sub">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '%</div></div>' +
+    '<div class="card7839 warn"><div class="label">預估股利</div><div class="value">$' + fmt(divTotal) + '</div><div class="sub">每股 ' + DIVIDEND_PER_SHARE_7839 + '</div></div>' +
+    '<div class="card7839 ' + gainCls + '"><div class="label">潛在總收益</div><div class="value">' + (potential>=0?'+':'') + '$' + fmt(potential) + '</div><div class="sub">' + (potentialPct>=0?'+':'') + potentialPct.toFixed(2) + '%</div></div>';
+
+  document.getElementById('lotsBody7839').innerHTML = records7839[idx].lots.map(function(l){
+    const amount = l.price * l.qty, tc = amount + l.fee, val = l.qty * close, g = val - tc;
+    const color = g >= 0 ? 'var(--green-dk)' : 'var(--red-dk)';
+    return '<tr><td>' + l.price.toFixed(1) + '</td><td>' + fmt(l.qty) + '</td><td>' + fmt(l.fee) + '</td><td>$' + fmt(tc) + '</td>' +
+      '<td style="color:' + color + '">' + (g>=0?'+':'') + '$' + fmt(g) + '</td></tr>';
+  }).join('');
+
+  // 更新總覽頁彙總資料
+  window.summary7839 = { cost: cost, mkt: marketValue, gain: gain, live: useLive };
+  document.getElementById('bd7839-cost').textContent = '$' + fmt(cost);
+  document.getElementById('bd7839-mkt').textContent = '$' + fmt(marketValue);
+  const gEl = document.getElementById('bd7839-gain');
+  gEl.textContent = (gain>=0?'+':'') + '$' + fmt(gain);
+  gEl.className = 'v ' + (gain>=0?'pos':'neg');
+  document.getElementById('bd7839-status').innerHTML = useLive
+    ? '<span class="bdg bdg-live">即時</span>'
+    : '<span class="bdg bdg-stale">收盤價</span>';
+
+  updateOverview();
+}
+
+/* =====================================================================
+   ② 特別股投資報告邏輯 — 取自原 stock-report，全域變數沿用原名
+===================================================================== */
 const API_URL = 'https://script.google.com/macros/s/AKfycbzWk2Fw0s3tdd1H2vWoGEQBGZHMQkvNhYpuFHuemEYPwKvhEnoXSKxgh8D6xPLLb-xEsA/exec';
 let historyData = [];
 let selectedDatePrices = null;
@@ -247,8 +603,6 @@ const STOCK_NAMES = {
   '2887E':'台新戊特','6592A':'和潤甲特','6592B':'和潤乙特','9941A':'裕融甲特'
 };
 
-// 預設除息日 / 發放日資料（與 Google Sheets 同步，API 抓不到資料時的備援值）
-// 有新確認日期時，請同時更新 Google Sheets 與下面這份預設值
 const DEFAULT_EXDIV = {
   '2891B':{date:'2026-08 預估',confirmed:false,divAmount:'',payDate:''},
   '2891C':{date:'2026-08 預估',confirmed:false,divAmount:'',payDate:''},
@@ -292,9 +646,30 @@ const pct=n=>sgn(n)+(n*100).toFixed(2)+'%';
 const fmtN=n=>Math.round(n).toLocaleString('zh-TW');
 const fmtM=n=>(n/1e6).toFixed(2)+'M';
 
-// 合併 API 即時資料 與 預設備援資料，回傳每檔股票目前已知的除息日/發放日資訊
 function getExDivInfo(code){
   return exDivData[code] || DEFAULT_EXDIV[code] || {date:'預估',confirmed:false,divAmount:'',payDate:''};
+}
+
+function initPref(){
+  fetchExDivData();
+  fetchHistory();
+  fetchPrices();
+  setInterval(fetchPrices, 5*60*1000);
+  setInterval(fetchExDivData, 60*60*1000);
+
+  document.querySelectorAll('#panel-pref thead th[data-col]').forEach(th=>th.addEventListener('click',()=>{
+    const c=th.dataset.col;if(sc===c)sd*=-1;else{sc=c;sd=-1;}update();
+  }));
+  document.querySelectorAll('#panel-pref .mtab').forEach(btn=>btn.addEventListener('click',function(){
+    document.querySelectorAll('#panel-pref .mtab').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    prevMode=this.dataset.prev;
+    if(prevMode!=='sel'){
+      selectedDatePrices=null;
+      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤';
+    }
+    update();
+  }));
 }
 
 async function fetchExDivData(){
@@ -312,20 +687,16 @@ async function fetchExDivData(){
 function renderExDiv(){
   const row = document.getElementById('exdiv-row');
   if(!row) return;
-
-  // Group by date: confirmed stocks each get their own card by exact date,
-  // unconfirmed stocks group by month
   const groups = {};
   BASE.forEach(s=>{
     const info = getExDivInfo(s.code);
     const date = info.date || '';
     const confirmed = info.confirmed;
-    // confirmed with exact date => group by full date; otherwise group by month string
     let key;
     if(confirmed && date.match(/\d{4}-\d{2}-\d{2}/)){
-      key = date.substring(0,10); // exact date as key
+      key = date.substring(0,10);
     } else {
-      key = date.replace(' 預估','').trim(); // e.g. "2026-07"
+      key = date.replace(' 預估','').trim();
     }
     if(!groups[key]) groups[key]={stocks:[],hasConfirmed:false};
     groups[key].stocks.push({...s, ...info, name:STOCK_NAMES[s.code]});
@@ -365,10 +736,8 @@ async function fetchHistory(){
     const res = await fetch(API_URL+'?mode=history', {redirect:'follow', cache:'no-store'});
     if(!res.ok) throw new Error();
     historyData = await res.json();
-    // populate date selector
     const sel = document.getElementById('date-select');
     sel.innerHTML = '<option value="">— 選擇日期 —</option>';
-    // show latest 60 days, newest first
     const recent = [...historyData].reverse().slice(0,60);
     recent.forEach(row=>{
       const opt = document.createElement('option');
@@ -385,9 +754,8 @@ async function fetchHistory(){
           const code = s.code;
           return row[code] ? parseFloat(row[code]) : s.c529;
         });
-        // activate "對比選取日" tab
-        document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
-        document.querySelector('.mtab[data-prev="sel"]').classList.add('active');
+        document.querySelectorAll('#panel-pref .mtab').forEach(b=>b.classList.remove('active'));
+        document.querySelector('#panel-pref .mtab[data-prev="sel"]').classList.add('active');
         prevMode='sel';
         update();
       }
@@ -414,19 +782,17 @@ async function fetchPrices(){
       const now=new Date();
       lastUpdated=`${now.getMonth()+1}/${now.getDate()} ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} 自動更新`;
       document.getElementById('loading-banner').style.display='none';
-      document.getElementById('status-dot').style.background='var(--green)';
-      document.getElementById('status-text').textContent=lastUpdated;
-      document.getElementById('hdr-date').textContent='收盤價即時資料';
+      document.getElementById('hdr-date').textContent = lastUpdated;
     }
   } catch(e) {
     document.getElementById('loading-banner').style.display='none';
     document.getElementById('error-banner').style.display='flex';
-    document.getElementById('status-dot').style.background='var(--amber)';
-    document.getElementById('status-text').textContent='使用 5/29 基準資料';
-    document.getElementById('hdr-date').textContent='截至 2026-05-29（備用）';
   }
   update();
 }
+
+let sc='gainPct',sd=-1;
+window.summaryPref = { cost: TOTAL_COST, mkt:0, gain:0, yield: AVG_YIELD, live:false };
 
 function update(){
   const S=BASE.map((s,i)=>{
@@ -497,7 +863,6 @@ function update(){
   document.getElementById('eff-ret-bar').style.width=Math.max(0,Math.min(100,totalRet/0.06*100)).toFixed(0)+'%';
   document.getElementById('eff-ret-note').innerHTML=`殖利率 ${pct(AVG_YIELD)}，帳${totalGain>=0?'利':'損'} ${pct(totalGain/TOTAL_COST)}<br><span style="color:var(--text3)">除息填息後可回升至約 ${pct(AVG_YIELD)}</span>`;
 
-  // If viewing selected date, show that date's prices in table
   if(prevMode==='sel' && selectedDatePrices){
     const Ssel=BASE.map((s,i)=>{
       const info = getExDivInfo(s.code);
@@ -517,17 +882,26 @@ function update(){
     });
     const tgSel=Ssel.reduce((a,s)=>a+s.gain,0);
     const tsSel=Ssel.reduce((a,s)=>a+s.shares,0);
-    // update table header to show selected date
-    document.querySelector('thead th[data-col="close"]').textContent=
+    document.querySelector('#panel-pref thead th[data-col="close"]').textContent=
       document.getElementById('date-select').value+' 收盤';
     renderTable(Ssel,tgSel,tsSel);
   } else {
-    document.querySelector('thead th[data-col="close"]').textContent='收盤';
+    document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤';
     renderTable(S,totalGain,totalShares);
   }
+
+  // 更新總覽頁彙總資料
+  window.summaryPref = { cost: TOTAL_COST, mkt: totalMkt, gain: totalGain, yield: AVG_YIELD, live:true };
+  document.getElementById('bdpref-cost').textContent = '$' + fmtM(TOTAL_COST);
+  document.getElementById('bdpref-mkt').textContent = '$' + (totalMkt/1e8).toFixed(3)+'億';
+  const bgEl = document.getElementById('bdpref-gain');
+  bgEl.textContent = (totalGain>=0?'+':'') + fmtM(totalGain);
+  bgEl.className = 'v ' + (totalGain>=0?'pos':'neg');
+  document.getElementById('bdpref-yield').textContent = pct(AVG_YIELD);
+
+  updateOverview();
 }
 
-let sc='gainPct',sd=-1;
 function renderTable(S,totalGain,totalShares){
   const rows=[...S].sort((a,b)=>typeof a[sc]==='string'?sd*a[sc].localeCompare(b[sc]):sd*(a[sc]-b[sc]));
   document.getElementById('tbody').innerHTML=
@@ -541,7 +915,7 @@ function renderTable(S,totalGain,totalShares){
       <td style="color:#0F7EA6">${pct(s.divY)}</td>
       <td class="${s.totalReturn>=0?'pos':'neg'}" style="font-weight:500">${pct(s.totalReturn)}</td>
       <td>$${fmtM(s.annDiv)}</td>
-      <td style="font-family:var(--font)"><span class="bdg ${s.conf?'bdg-conf':'bdg-est'}">${s.exDiv}</span></td>
+      <td style="font-family:var(--font)"><span class="bdg2 ${s.conf?'bdg-conf':'bdg-est'}">${s.exDiv}</span></td>
       <td style="font-family:var(--font)">${s.payDate}</td>
     </tr>`).join('')+
     `<tr class="tr-total">
@@ -552,77 +926,38 @@ function renderTable(S,totalGain,totalShares){
       <td class="${(totalGain/TOTAL_COST+AVG_YIELD)>=0?'pos':'neg'}" style="font-weight:500">${pct(totalGain/TOTAL_COST+AVG_YIELD)}</td>
       <td>$${fmtM(TOTAL_DIV)}</td><td>—</td><td>—</td>
     </tr>`;
-  document.querySelectorAll('thead th[data-col]').forEach(th=>{
+  document.querySelectorAll('#panel-pref thead th[data-col]').forEach(th=>{
     th.classList.remove('sa','sd');
     if(th.dataset.col===sc) th.classList.add(sd===1?'sa':'sd');
   });
 }
-document.querySelectorAll('thead th[data-col]').forEach(th=>th.addEventListener('click',()=>{
-  const c=th.dataset.col;if(sc===c)sd*=-1;else{sc=c;sd=-1;}update();
-}));
-document.querySelectorAll('.mtab').forEach(btn=>btn.addEventListener('click',function(){
-  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
-  this.classList.add('active');
-  prevMode=this.dataset.prev;
-  if(prevMode!=='sel'){
-    selectedDatePrices=null;
-    document.querySelector('thead th[data-col="close"]').textContent='收盤';
-  }
-  update();
-}));
 
-// ── Password protection ──
-const PASS_KEY = 'stock_auth_v1';
-const PASS_HASH = '8e90a0e4b1f4e2c3d5a6b7c8d9e0f1a2'; // placeholder, replaced below
+/* =====================================================================
+   ③ 總覽頁彙總計算 — 合併 summary7839 與 summaryPref
+===================================================================== */
+function updateOverview(){
+  const a = window.summary7839 || {cost:0,mkt:0,gain:0};
+  const b = window.summaryPref  || {cost:0,mkt:0,gain:0,yield:0};
 
-function simpleHash(str){
-  let h = 0;
-  for(let i=0;i<str.length;i++) h = Math.imul(31,h)+str.charCodeAt(i)|0;
-  return Math.abs(h).toString(16).padStart(8,'0');
-}
+  const totalCost = a.cost + b.cost;
+  const totalMkt  = a.mkt  + b.mkt;
+  const totalGain = a.gain + b.gain;
+  if(totalCost <= 0) return;
 
-// Password is: stock2026  (change this by updating the hash below)
-const CORRECT_HASH = simpleHash('stock2026');
+  // 綜合報酬率：利得 / 總成本，再加上特別股組合的股利收益（7839 的股利已包含在各自報告，此處用利得率為主，股利另計）
+  const blendedDivYield = b.cost > 0 ? (b.yield * b.cost / totalCost) : 0;
+  const totalRet = totalGain/totalCost + blendedDivYield;
 
-function checkAuth(){
-  const saved = sessionStorage.getItem(PASS_KEY);
-  if(saved === CORRECT_HASH){
-    document.getElementById('loginOverlay').style.display='none';
-    return true;
-  }
-  return false;
-}
-
-function tryLogin(){
-  const pw = document.getElementById('pwInput').value;
-  if(simpleHash(pw) === CORRECT_HASH){
-    sessionStorage.setItem(PASS_KEY, CORRECT_HASH);
-    document.getElementById('loginOverlay').style.display='none';
-    fetchExDivData();
-    fetchHistory();
-    fetchPrices();
-    setInterval(fetchPrices, 5*60*1000);
-    setInterval(fetchExDivData, 60*60*1000);
-  } else {
-    document.getElementById('pwError').style.display='block';
-    document.getElementById('pwInput').value='';
-    document.getElementById('pwInput').focus();
-  }
-}
-
-document.getElementById('pwBtn').addEventListener('click', tryLogin);
-document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
-
-// Check if already authenticated
-if(!checkAuth()){
-  // Show login, don't fetch data yet
-  setTimeout(()=>document.getElementById('pwInput').focus(), 100);
-} else {
-  fetchExDivData();
-  fetchHistory();
-  fetchPrices();
-  setInterval(fetchPrices, 5*60*1000);
-  setInterval(fetchExDivData, 60*60*1000);
+  document.getElementById('ov-cost').textContent = '$' + fmt(totalCost) + ' 元';
+  document.getElementById('ov-mkt').textContent = '$' + fmt(totalMkt) + ' 元';
+  document.getElementById('ov-mkt-sub').textContent = (a.live||b.live) ? '含即時股價' : '部分為前次收盤價';
+  const ovGainEl = document.getElementById('ov-gain');
+  ovGainEl.textContent = (totalGain>=0?'+':'') + '$' + fmt(totalGain) + ' 元';
+  ovGainEl.style.color = totalGain>=0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('ov-gain-pct').textContent = (totalGain>=0?'+':'') + (totalGain/totalCost*100).toFixed(2) + '% 相對總成本';
+  const ovRetEl = document.getElementById('ov-ret');
+  ovRetEl.textContent = (totalRet>=0?'+':'') + (totalRet*100).toFixed(2) + '%';
+  ovRetEl.style.color = totalRet>=0 ? 'var(--teal)' : 'var(--red)';
 }
 </script>
 </body>
