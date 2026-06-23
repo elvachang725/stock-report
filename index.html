@@ -215,30 +215,6 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 
   <!-- ============ 總覽頁 ============ -->
   <div class="tab-panel active" id="panel-overview">
-    <div class="sec mb18">轉投資總覽</div>
-    <div class="kpi-row mb24">
-      <div class="kpi c-navy">
-        <div class="kpi-l">總投入成本</div>
-        <div class="kpi-v" id="ov-cost">—</div>
-        <div class="kpi-s">兩組投資合計</div>
-      </div>
-      <div class="kpi c-blue">
-        <div class="kpi-l">目前總市值</div>
-        <div class="kpi-v" id="ov-mkt" style="color:var(--blue)">—</div>
-        <div class="kpi-s" id="ov-mkt-sub"></div>
-      </div>
-      <div class="kpi c-green">
-        <div class="kpi-l">未實現總利得</div>
-        <div class="kpi-v" id="ov-gain">—</div>
-        <div class="kpi-s" id="ov-gain-pct"></div>
-      </div>
-      <div class="kpi c-teal">
-        <div class="kpi-l">綜合報酬率</div>
-        <div class="kpi-v" id="ov-ret" style="color:var(--teal)">—</div>
-        <div class="kpi-s" id="ov-ret-sub">利得＋股利／總成本</div>
-      </div>
-    </div>
-
     <div class="sec mb18">各帳戶明細</div>
     <div class="breakdown-row mb24">
       <div class="bd-card">
@@ -1003,28 +979,8 @@ function renderTable(S,totalGain,totalShares){
    ③ 總覽頁彙總計算 — 合併 summary7839 與 summaryPref
 ===================================================================== */
 function updateOverview(){
-  const a = window.summary7839 || {cost:0,mkt:0,gain:0};
-  const b = window.summaryPref  || {cost:0,mkt:0,gain:0,yield:0};
-
-  const totalCost = a.cost + b.cost;
-  const totalMkt  = a.mkt  + b.mkt;
-  const totalGain = a.gain + b.gain;
-  if(totalCost <= 0) return;
-
-  // 綜合報酬率：利得 / 總成本，再加上特別股組合的股利收益（7839 的股利已包含在各自報告，此處用利得率為主，股利另計）
-  const blendedDivYield = b.cost > 0 ? (b.yield * b.cost / totalCost) : 0;
-  const totalRet = totalGain/totalCost + blendedDivYield;
-
-  document.getElementById('ov-cost').textContent = '$' + fmt(totalCost) + ' 元';
-  document.getElementById('ov-mkt').textContent = '$' + fmt(totalMkt) + ' 元';
-  document.getElementById('ov-mkt-sub').textContent = (a.live||b.live) ? '含即時股價' : '部分為前次收盤價';
-  const ovGainEl = document.getElementById('ov-gain');
-  ovGainEl.textContent = (totalGain>=0?'+':'') + '$' + fmt(totalGain) + ' 元';
-  ovGainEl.style.color = totalGain>=0 ? 'var(--green)' : 'var(--red)';
-  document.getElementById('ov-gain-pct').textContent = (totalGain>=0?'+':'') + (totalGain/totalCost*100).toFixed(2) + '% 相對總成本';
-  const ovRetEl = document.getElementById('ov-ret');
-  ovRetEl.textContent = (totalRet>=0?'+':'') + (totalRet*100).toFixed(2) + '%';
-  ovRetEl.style.color = totalRet>=0 ? 'var(--teal)' : 'var(--red)';
+  // 「轉投資總覽」加總區塊已移除，此函式僅保留供未來需要時參考；
+  // 各帳戶明細卡片（bd7839-*／bdpref-*）已在 render7839() 與 update() 內各自更新，無需在此重複處理。
 }
 </script>
 </body>
