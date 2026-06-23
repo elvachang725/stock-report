@@ -518,6 +518,7 @@ async function fetchLivePrice7839(){
 }
 
 async function init7839(){
+  renderExDivStatic7839();
   const statusEl = document.getElementById('status7839');
   try{
     const [res, live] = await Promise.all([
@@ -557,7 +558,7 @@ function buildDateSelect7839(){
   render7839(records7839.length - 1);
 }
 
-function renderExDiv7839(shares, divTotal, potentialPct){
+function renderExDivStatic7839(){
   const row = document.getElementById('exdiv-row-7839');
   if(!row) return;
   const info = EXDIV_INFO_7839;
@@ -580,7 +581,14 @@ function renderExDiv7839(shares, divTotal, potentialPct){
       '<div class="dc7839-date">' + info.payDate + '</div>' +
       '<div class="dc7839-amt">依董事會 6/16 決議公告</div>' +
     '</div>' +
-    '<div class="dc7839" style="background:#fff;border-color:#e3e0d8">' +
+    '<div class="dc7839" id="exdiv-dyn-cards-7839" style="display:contents"></div>';
+}
+
+function renderExDivDynamic7839(shares, divTotal, potentialPct){
+  const slot = document.getElementById('exdiv-dyn-cards-7839');
+  if(!slot) return; // 靜態卡片尚未渲染，跳過
+  slot.outerHTML =
+    '<div class="dc7839" id="exdiv-dyn-cards-7839" style="background:#fff;border-color:#e3e0d8">' +
       '<div class="dc7839-tag" style="color:#854f0b">依持股計算</div>' +
       '<div class="dc7839-name" style="color:#1f1e1c">預估股利總額</div>' +
       '<div class="dc7839-date" style="color:#854f0b">$' + fmt(divTotal) + '</div>' +
@@ -632,7 +640,7 @@ function render7839(idx){
       '<td style="color:' + color + '">' + (g>=0?'+':'') + '$' + fmt(g) + '</td></tr>';
   }).join('');
 
-  renderExDiv7839(shares, divTotal, potentialPct);
+  renderExDivDynamic7839(shares, divTotal, potentialPct);
 
   // 更新總覽頁彙總資料
   window.summary7839 = { cost: cost, mkt: marketValue, gain: gain, live: useLive };
