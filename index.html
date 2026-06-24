@@ -604,7 +604,7 @@ function render7839(idx){
     '<div class="card7839"><div class="label">累計成本</div><div class="value">$' + fmtK(cost) + ' 仟元</div></div>' +
     '<div class="card7839"><div class="label">平均成本</div><div class="value">$' + avgCost.toFixed(2) + '</div></div>' +
     '<div class="card7839"><div class="label">當日收盤價</div><div class="value">$' + close.toFixed(2) + priceTag + '</div></div>' +
-    '<div class="card7839"><div class="label">當日成交量</div><div class="value">' + fmt(records7839[idx].volume) + ' 股</div></div>';
+    '<div class="card7839"><div class="label">當日成交量</div><div class="value">' + fmt(records7839[idx].volume) + ' 張</div></div>';
 
   document.getElementById('gainMetrics7839').innerHTML =
     '<div class="card7839 ' + gainCls + '"><div class="label">即時利得</div><div class="value">' + (gain>=0?'+':'') + '$' + fmtK(gain) + ' 仟元</div><div class="sub">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '%</div></div>' +
