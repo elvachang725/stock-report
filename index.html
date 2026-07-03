@@ -480,6 +480,7 @@ function fmtK(n){ return (n/1000).toLocaleString('en-US', {minimumFractionDigits
 
 let records7839 = [];
 let livePrice7839 = null;
+let liveVolume7839 = null;
 
 // 暴露給總覽頁讀取的彙總結果
 window.summary7839 = { cost:0, mkt:0, gain:0, live:false };
@@ -489,8 +490,13 @@ async function fetchLivePrice7839(){
     const res = await fetch(LIVE_PRICE_CSV_URL_7839, {cache:'no-store'});
     if(!res.ok) return null;
     const rows = parseCSV(await res.text());
-    const v = toNum(rows[0] && rows[0][0]);
-    return isNaN(v) ? null : v;
+    // A11、B11 在 CSV 裡是 index 10（前 10 列為空白）
+    const dataRow = rows.find(r => r[0] && r[0].trim() !== '');
+    if(!dataRow) return null;
+    const price = toNum(dataRow[0]);
+    const vol = toNum(dataRow[1]);
+    liveVolume7839 = (!isNaN(vol) && vol > 0) ? vol : null;
+    return isNaN(price) ? null : price;
   } catch(err){ return null; }
 }
 
@@ -513,7 +519,7 @@ async function init7839(){
     });
     records7839 = Object.keys(byDate).sort().map(function(d){ return byDate[d]; });
     if(records7839.length === 0) throw new Error('沒有讀到資料列');
-    statusEl.textContent = '資料更新時間：' + new Date().toLocaleString('zh-TW') + (livePrice7839 ? '　即時股價：$' + livePrice7839.toFixed(2) : '　（即時股價暫時讀不到，已改用手動填的收盤價）');
+    statusEl.textContent = '資料更新時間：' + new Date().toLocaleString('zh-TW') + (livePrice7839 ? '　即時股價：$' + livePrice7839.toFixed(2) + (liveVolume7839 !== null ? '　成交：' + fmt(liveVolume7839) + ' 張' : '') : '　（即時股價暫時讀不到，已改用手動填的收盤價）');
     buildDateSelect7839();
   } catch(err){
     statusEl.textContent = '讀取 Google Sheets 失敗（' + err.message + '），請確認 SHEET_CSV_URL 是否已正確發佈為 CSV';
@@ -604,7 +610,7 @@ function render7839(idx){
     '<div class="card7839"><div class="label">累計成本</div><div class="value">$' + fmtK(cost) + ' 仟元</div></div>' +
     '<div class="card7839"><div class="label">平均成本</div><div class="value">$' + avgCost.toFixed(2) + '</div></div>' +
     '<div class="card7839"><div class="label">當日收盤價</div><div class="value">$' + close.toFixed(2) + priceTag + '</div></div>' +
-    '<div class="card7839"><div class="label">當日成交量</div><div class="value">' + fmt(records7839[idx].volume) + ' 張</div></div>';
+    '<div class="card7839"><div class="label">當日成交量</div><div class="value">' + fmt(useLive && liveVolume7839 !== null ? liveVolume7839 : records7839[idx].volume) + ' 張' + (useLive && liveVolume7839 !== null ? '<span style="font-size:11px;color:var(--green-dk);background:var(--green-lt);padding:2px 8px;border-radius:6px;margin-left:6px;">即時</span>' : '') + '</div></div>';
 
   document.getElementById('gainMetrics7839').innerHTML =
     '<div class="card7839 ' + gainCls + '"><div class="label">即時利得</div><div class="value">' + (gain>=0?'+':'') + '$' + fmtK(gain) + ' 仟元</div><div class="sub">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '%</div></div>' +
