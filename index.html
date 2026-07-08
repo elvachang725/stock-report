@@ -716,7 +716,16 @@ function initPref(){
     document.querySelectorAll('#panel-pref .mtab').forEach(b=>b.classList.remove('active'));
     this.classList.add('active');
     prevMode=this.dataset.prev;
-    if(prevMode!=='sel'){
+    if(prevMode==='430'){
+      selectedDatePrices=null;
+      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤 (4/30)';
+    } else if(prevMode==='529'){
+      selectedDatePrices=null;
+      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤 (5/29)';
+    } else if(prevMode==='630'){
+      selectedDatePrices=null;
+      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤 (6/30)';
+    } else if(prevMode!=='sel'){
       selectedDatePrices=null;
       document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤';
     }
@@ -947,7 +956,8 @@ function update(){
       document.getElementById('date-select').value+' 收盤';
     renderTable(Ssel,tgSel,tsSel);
   } else {
-    document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤';
+    const todayStr = new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
+    document.querySelector('#panel-pref thead th[data-col="close"]').textContent='即時 ('+todayStr+')';
     renderTable(S,totalGain,totalShares);
   }
 
