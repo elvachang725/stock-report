@@ -304,9 +304,10 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
         </select>
       </div>
       <div style="display:flex;gap:6px">
-        <button class="mtab active" data-prev="sel">對比選取日</button>
+        <button class="mtab" data-prev="sel">對比選取日</button>
         <button class="mtab" data-prev="430">對比 4/30</button>
         <button class="mtab" data-prev="529">對比 5/29</button>
+        <button class="mtab active" data-prev="630">對比 6/30</button>
       </div>
     </div>
     <div class="mom-row" style="margin-bottom:8px">
@@ -670,26 +671,26 @@ const DEFAULT_EXDIV = {
 };
 
 const BASE=[
-  {code:"2891B",name:"中信乙特",  shares:79000,  cost:5047609,  divY:0.04376,  exDiv:"2026-08 預估",conf:false, c430:64.6, c529:64.5},
-  {code:"2891C",name:"中信丙特",  shares:111000, cost:6890349,  divY:0.03093,  exDiv:"2026-08 預估",conf:false, c430:62.2, c529:62.5},
-  {code:"2881A",name:"富邦甲特",  shares:145000, cost:9252098,  divY:0.043079, exDiv:"2026-07-01",conf:true, c430:64.4, c529:63.8},
-  {code:"2881B",name:"富邦乙特",  shares:547000, cost:34147320, divY:0.041207, exDiv:"2026-07-01",conf:true, c430:62.6, c529:62.7},
-  {code:"2882A",name:"國泰甲特",  shares:496000, cost:30746080, divY:0.04075,  exDiv:"2026-06-30",conf:true, c430:62.3, c529:61.9},
-  {code:"2882B",name:"國泰乙特",  shares:245000, cost:14888474, divY:0.03753,  exDiv:"2026-06-30",conf:true, c430:60.9, c529:60.8},
-  {code:"1101B",name:"台泥乙特",  shares:762000, cost:34700746, divY:0.044495, exDiv:"2026-07-01",conf:true,  c430:45.4, c529:45.3},
-  {code:"2838A",name:"聯邦銀甲特",shares:92000,  cost:5017517,  divY:0.048235, exDiv:"2026-07-03",conf:true, c430:54.8, c529:54.3},
-  {code:"2887E",name:"台新戊特",  shares:504000, cost:25759358, divY:0.047667, exDiv:"2026-07-01",conf:true, c430:51.5, c529:50.9},
-  {code:"6592A",name:"和潤甲特",  shares:98000,  cost:9549074,  divY:0.043104, exDiv:"2026-06-30",conf:true, c430:97.3, c529:96.8},
-  {code:"6592B",name:"和潤乙特",  shares:140000, cost:13695361, divY:0.046001, exDiv:"2026-06-30",conf:true, c430:97.5, c529:97.0},
-  {code:"9941A",name:"裕融甲特",  shares:203000, cost:10287312, divY:0.046163, exDiv:"2026-09 預估",conf:false, c430:50.7, c529:50.3},
+  {code:"2891B",name:"中信乙特",  shares:79000,  cost:5047609,  divY:0.04376,  exDiv:"2026-08 預估",conf:false, c430:64.6, c529:64.50, c630:64.30},
+  {code:"2891C",name:"中信丙特",  shares:111000, cost:6890349,  divY:0.03093,  exDiv:"2026-08 預估",conf:false, c430:62.2, c529:62.50, c630:62.70},
+  {code:"2881A",name:"富邦甲特",  shares:145000, cost:9252098,  divY:0.043079, exDiv:"2026-07-01",conf:true, c430:64.4, c529:63.80, c630:63.60},
+  {code:"2881B",name:"富邦乙特",  shares:547000, cost:34147320, divY:0.041207, exDiv:"2026-07-01",conf:true, c430:62.6, c529:62.70, c630:62.90},
+  {code:"2882A",name:"國泰甲特",  shares:496000, cost:30746080, divY:0.04075,  exDiv:"2026-06-30",conf:true, c430:62.3, c529:61.90, c630:60.00},
+  {code:"2882B",name:"國泰乙特",  shares:245000, cost:14888474, divY:0.03753,  exDiv:"2026-06-30",conf:true, c430:60.9, c529:60.80, c630:59.10},
+  {code:"1101B",name:"台泥乙特",  shares:762000, cost:34700746, divY:0.044495, exDiv:"2026-07-01",conf:true,  c430:45.4, c529:45.30, c630:45.60},
+  {code:"2838A",name:"聯邦銀甲特",shares:92000,  cost:5017517,  divY:0.048235, exDiv:"2026-07-03",conf:true, c430:54.8, c529:54.30, c630:54.30},
+  {code:"2887E",name:"台新戊特",  shares:504000, cost:25759358, divY:0.047667, exDiv:"2026-07-01",conf:true, c430:51.5, c529:50.90, c630:51.10},
+  {code:"6592A",name:"和潤甲特",  shares:98000,  cost:9549074,  divY:0.043104, exDiv:"2026-06-30",conf:true, c430:97.3, c529:96.80, c630:94.50},
+  {code:"6592B",name:"和潤乙特",  shares:140000, cost:13695361, divY:0.046001, exDiv:"2026-06-30",conf:true, c430:97.5, c529:97.00, c630:94.40},
+  {code:"9941A",name:"裕融甲特",  shares:203000, cost:10287312, divY:0.046163, exDiv:"2026-09 預估",conf:false, c430:50.7, c529:50.30, c630:50.60},
 ];
 
 const TOTAL_COST = BASE.reduce((a,s)=>a+s.cost,0);
 const TOTAL_DIV  = BASE.reduce((a,s)=>a+s.cost*s.divY,0);
 const AVG_YIELD  = TOTAL_DIV/TOTAL_COST;
 
-let prices = BASE.map(s=>s.c529);
-let prevMode = '430';
+let prices = BASE.map(s=>s.c630);
+let prevMode = '630';
 let lastUpdated = '5/29 基準';
 
 const sgn=n=>n>=0?'+':'';
@@ -893,6 +894,9 @@ function update(){
   } else if(prevMode==='430'){
     prevPrices = BASE.map(s=>s.c430);
     prevLabel = '4/30 收盤　帳面利得';
+  } else if(prevMode==='630'){
+    prevPrices = BASE.map(s=>s.c630);
+    prevLabel = '6/30 收盤　帳面利得';
   } else {
     prevPrices = BASE.map(s=>s.c529);
     prevLabel = '5/29 收盤　帳面利得';
