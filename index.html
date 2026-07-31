@@ -415,7 +415,6 @@ function enterApp(){
 }
 document.getElementById('pwBtn').addEventListener('click', tryLogin);
 document.getElementById('pwInput').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin(); });
-if(checkAuth()){ enterApp(); } else { setTimeout(()=>document.getElementById('pwInput').focus(),100); }
 
 /* =====================================================================
    頁籤切換
@@ -1010,6 +1009,9 @@ function updateOverview(){
   // 「轉投資總覽」加總區塊已移除，此函式僅保留供未來需要時參考；
   // 各帳戶明細卡片（bd7839-*／bdpref-*）已在 render7839() 與 update() 內各自更新，無需在此重複處理。
 }
+
+// 所有變數與函式宣告完畢後，再執行初始化
+if(checkAuth()){ enterApp(); } else { setTimeout(()=>document.getElementById('pwInput').focus(),100); }
 </script>
 </body>
 </html>
