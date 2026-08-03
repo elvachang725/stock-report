@@ -303,15 +303,12 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
           <option value="">— 載入中 —</option>
         </select>
       </div>
-      <div style="display:flex;gap:6px">
-        <button class="mtab" data-prev="sel">對比選取日</button>
-        <button class="mtab" data-prev="430">對比 4/30</button>
-        <button class="mtab" data-prev="529">對比 5/29</button>
-        <button class="mtab active" data-prev="630">對比 6/30</button>
+      <div style="display:flex;gap:6px" id="prev-btn-group">
+        <button class="mtab active" data-prev="sel">對比選取日</button>
       </div>
     </div>
     <div class="mom-row" style="margin-bottom:8px">
-      <div class="mom-card"><div class="mom-l" id="mom-prev-label">4/30　帳面利得</div><div class="mom-v" id="mom-prev-val">—</div><div class="mom-s" id="mom-prev-pct"></div></div>
+      <div class="mom-card"><div class="mom-l" id="mom-prev-label">帳面利得</div><div class="mom-v" id="mom-prev-val">—</div><div class="mom-s" id="mom-prev-pct"></div></div>
       <div class="mom-card"><div class="mom-l">目前　帳面利得</div><div class="mom-v" id="mom-curr-val">—</div><div class="mom-s" id="mom-curr-pct"></div></div>
       <div class="mom-card"><div class="mom-l">變化</div><div class="mom-v" id="mom-delta">—</div><div id="mom-pill"></div></div>
     </div>
@@ -689,8 +686,10 @@ const TOTAL_DIV  = BASE.reduce((a,s)=>a+s.cost*s.divY,0);
 const AVG_YIELD  = TOTAL_DIV/TOTAL_COST;
 
 let prices = BASE.map(s=>s.c630);
-let prevMode = '630';
-let lastUpdated = '5/29 基準';
+let prevMode = 'sel';
+let monthEndPrices = {};   // { 'YYYY-MM': [priceForBASE[0], priceForBASE[1], ...] }
+let monthEndLabels = {};   // { 'YYYY-MM': 'YYYY-MM-DD' }  實際月底交易日日期
+let lastUpdated = '載入中';
 
 const sgn=n=>n>=0?'+':'';
 const pct=n=>sgn(n)+(n*100).toFixed(2)+'%';
@@ -710,25 +709,6 @@ function initPref(){
 
   document.querySelectorAll('#panel-pref thead th[data-col]').forEach(th=>th.addEventListener('click',()=>{
     const c=th.dataset.col;if(sc===c)sd*=-1;else{sc=c;sd=-1;}update();
-  }));
-  document.querySelectorAll('#panel-pref .mtab').forEach(btn=>btn.addEventListener('click',function(){
-    document.querySelectorAll('#panel-pref .mtab').forEach(b=>b.classList.remove('active'));
-    this.classList.add('active');
-    prevMode=this.dataset.prev;
-    if(prevMode==='430'){
-      selectedDatePrices=null;
-      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤 (4/30)';
-    } else if(prevMode==='529'){
-      selectedDatePrices=null;
-      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤 (5/29)';
-    } else if(prevMode==='630'){
-      selectedDatePrices=null;
-      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤 (6/30)';
-    } else if(prevMode!=='sel'){
-      selectedDatePrices=null;
-      document.querySelector('#panel-pref thead th[data-col="close"]').textContent='收盤';
-    }
-    update();
   }));
 }
 
@@ -791,11 +771,75 @@ function renderExDiv(){
   }).join('');
 }
 
+/* -----------------------------------------------------------------
+   自動月底比對按鈕：從歷史資料裡，抓出「每個月最後一筆有資料的交易日」
+   並動態產生「對比 X/XX」按鈕，取代原本寫死的 c430/c529/c630
+----------------------------------------------------------------- */
+function buildMonthEndButtons(){
+  monthEndPrices = {};
+  monthEndLabels = {};
+
+  const byMonth = {}; // 'YYYY-MM' -> 最後一筆 row（history 依日期由舊到新排序）
+  historyData.forEach(row=>{
+    const ym = row.date.substring(0,7);
+    byMonth[ym] = row; // 一路覆蓋，留下當月最後一筆
+  });
+
+  const nowYm = new Date().toISOString().substring(0,7);
+  const months = Object.keys(byMonth).filter(m=>m!==nowYm).sort(); // 排除當月（尚未走完）
+  const recentMonths = months.slice(-4); // 最近 4 個完整月份
+
+  recentMonths.forEach(ym=>{
+    const row = byMonth[ym];
+    monthEndPrices[ym] = BASE.map(s=> row[s.code] !== undefined ? parseFloat(row[s.code]) : s.c630);
+    monthEndLabels[ym] = row.date;
+  });
+
+  const group = document.getElementById('prev-btn-group');
+  if(!group) return;
+  // 保留「對比選取日」，其餘動態按鈕先清空重建
+  group.innerHTML = '<button class="mtab' + (prevMode==='sel'?' active':'') + '" data-prev="sel">對比選取日</button>';
+  recentMonths.forEach(ym=>{
+    const label = monthEndLabels[ym]; // yyyy-MM-dd
+    const mmdd = label.substring(5).replace('-','/').replace(/^0/,'');
+    const btn = document.createElement('button');
+    btn.className = 'mtab' + (prevMode===ym ? ' active':'');
+    btn.dataset.prev = ym;
+    btn.textContent = '對比 ' + mmdd;
+    group.appendChild(btn);
+  });
+
+  // 預設選最新一個月底做對比（若目前還是初始 sel 且沒有選取日）
+  if(prevMode==='sel' && !selectedDatePrices && recentMonths.length){
+    prevMode = recentMonths[recentMonths.length-1];
+  }
+
+  bindPrevButtons();
+}
+
+function bindPrevButtons(){
+  document.querySelectorAll('#prev-btn-group .mtab').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#prev-btn-group .mtab').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      prevMode = this.dataset.prev;
+      if(prevMode !== 'sel'){
+        selectedDatePrices = null;
+        const label = monthEndLabels[prevMode];
+        document.querySelector('#panel-pref thead th[data-col="close"]').textContent = '收盤 (' + label.substring(5).replace('-','/') + ')';
+      }
+      update();
+    });
+  });
+}
+
 async function fetchHistory(){
   try {
     const res = await fetch(API_URL+'?mode=history', {redirect:'follow', cache:'no-store'});
     if(!res.ok) throw new Error();
     historyData = await res.json();
+    historyData.sort((a,b)=> a.date < b.date ? -1 : 1);
+
     const sel = document.getElementById('date-select');
     sel.innerHTML = '<option value="">— 選擇日期 —</option>';
     const recent = [...historyData].reverse().slice(0,60);
@@ -814,12 +858,16 @@ async function fetchHistory(){
           const code = s.code;
           return row[code] ? parseFloat(row[code]) : s.c529;
         });
-        document.querySelectorAll('#panel-pref .mtab').forEach(b=>b.classList.remove('active'));
-        document.querySelector('#panel-pref .mtab[data-prev="sel"]').classList.add('active');
+        document.querySelectorAll('#prev-btn-group .mtab').forEach(b=>b.classList.remove('active'));
+        const selBtn = document.querySelector('#prev-btn-group .mtab[data-prev="sel"]');
+        if(selBtn) selBtn.classList.add('active');
         prevMode='sel';
         update();
       }
     });
+
+    buildMonthEndButtons();
+    update();
   } catch(e){ console.log('history fetch failed', e); }
 }
 
@@ -899,15 +947,12 @@ function update(){
     prevPrices = selectedDatePrices;
     const selDate = document.getElementById('date-select').value;
     prevLabel = selDate+'　帳面利得';
-  } else if(prevMode==='430'){
-    prevPrices = BASE.map(s=>s.c430);
-    prevLabel = '4/30 收盤　帳面利得';
-  } else if(prevMode==='630'){
+  } else if(monthEndPrices[prevMode]){
+    prevPrices = monthEndPrices[prevMode];
+    prevLabel = monthEndLabels[prevMode]+'　帳面利得';
+  } else {
     prevPrices = BASE.map(s=>s.c630);
     prevLabel = '6/30 收盤　帳面利得';
-  } else {
-    prevPrices = BASE.map(s=>s.c529);
-    prevLabel = '5/29 收盤　帳面利得';
   }
   const prevGain=BASE.reduce((a,s,i)=>a+(prevPrices[i]*s.shares-s.cost),0);
   const delta=totalGain-prevGain;
