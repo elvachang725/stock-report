@@ -795,9 +795,14 @@ function buildMonthEndButtons(){
     monthEndLabels[ym] = row.date;
   });
 
+  // 先決定預設要選哪個按鈕（若目前還是初始 sel 且沒有選取日，預設選最新一個月底）
+  if(prevMode==='sel' && !selectedDatePrices && recentMonths.length){
+    prevMode = recentMonths[recentMonths.length-1];
+  }
+
   const group = document.getElementById('prev-btn-group');
   if(!group) return;
-  // 保留「對比選取日」，其餘動態按鈕先清空重建
+  // 決定好 prevMode 之後，再依照最終的 prevMode 畫按鈕外觀，避免高亮跟實際選取對不上
   group.innerHTML = '<button class="mtab' + (prevMode==='sel'?' active':'') + '" data-prev="sel">對比選取日</button>';
   recentMonths.forEach(ym=>{
     const label = monthEndLabels[ym]; // yyyy-MM-dd
@@ -808,11 +813,6 @@ function buildMonthEndButtons(){
     btn.textContent = '對比 ' + mmdd;
     group.appendChild(btn);
   });
-
-  // 預設選最新一個月底做對比（若目前還是初始 sel 且沒有選取日）
-  if(prevMode==='sel' && !selectedDatePrices && recentMonths.length){
-    prevMode = recentMonths[recentMonths.length-1];
-  }
 
   bindPrevButtons();
 }
