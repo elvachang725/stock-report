@@ -365,9 +365,9 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
       </div>
       <div class="ac">
         <div class="ac-head"><div class="ac-icon" style="background:var(--green-lt)">📅</div><span class="ac-title">除息前後時機</span></div>
-        <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag" style="color:var(--green-dk)">7/11 確認</span></div><div class="ac-note">帳損，除息前勿賣，領息後追蹤填息進度</div></div></div>
-        <div class="ac-row"><div class="ac-dot" style="background:var(--amber)"></div><div><div class="ac-name">台新戊特 / 聯邦銀 <span class="ac-tag" style="color:var(--amber)">7 月預估</span></div><div class="ac-note">帳損除息後可大幅彌補，除息前維持持倉</div></div></div>
-        <div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">和潤 / 裕融 <span class="ac-tag">9 月預估</span></div><div class="ac-note">9 月前持有，除息後視報酬決定去留</div></div></div>
+        <div id="timing-body">
+          <div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">載入中...</div></div></div>
+        </div>
       </div>
       <div class="ac">
         <div class="ac-head"><div class="ac-icon" style="background:var(--amber-lt)">🛡</div><span class="ac-title">停損 / 停利</span></div>
@@ -772,6 +772,81 @@ function renderExDiv(){
 }
 
 /* -----------------------------------------------------------------
+   動態「除息前後時機」卡片
+   依今天日期 vs 每檔的除息日／發放日，自動判斷階段並產生對應建議文字：
+     pre        尚未除息（含未公告確切日期的預估股）
+     exed       已除息，但股利尚未入帳
+     paid       股利已入帳，追蹤填息階段
+----------------------------------------------------------------- */
+function parseDateLoose(str){
+  if(!str) return null;
+  const m = String(str).match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(!m) return null;
+  return new Date(parseInt(m[1]), parseInt(m[2])-1, parseInt(m[3]));
+}
+
+function getTimingPhase(info){
+  if(!info.confirmed) return 'pre'; // 尚未公告確切日期，視為除息前
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const exDate = parseDateLoose(info.date);
+  const payDate = parseDateLoose(info.payDate);
+  if(!exDate) return 'pre';
+  if(today < exDate) return 'pre';
+  if(payDate && today >= payDate) return 'paid';
+  return 'exed';
+}
+
+function renderTimingCard(S){
+  const body = document.getElementById('timing-body');
+  if(!body) return;
+
+  const phaseGroups = { pre: [], exed: [], paid: [] };
+  S.forEach(s=>{
+    const info = getExDivInfo(s.code);
+    const phase = getTimingPhase(info);
+    phaseGroups[phase].push({ ...s, info });
+  });
+
+  const phaseOrder = ['paid','exed','pre'];
+  const phaseMeta = {
+    paid: { dot:'var(--text3)', label:'已發放' },
+    exed: { dot:'var(--amber)', label:'已除息待入帳' },
+    pre:  { dot:'var(--blue)',  label:'除息前' },
+  };
+
+  const rowsHtml = phaseOrder
+    .filter(p=>phaseGroups[p].length)
+    .map(p=>{
+      const stocks = phaseGroups[p];
+      const names = stocks.map(s=>s.name).join(' / ');
+      const avgGainPct = stocks.reduce((a,s)=>a+s.gainPct,0) / stocks.length;
+      const gainWord = avgGainPct >= 0 ? '帳利' : '帳損';
+      const dotColor = avgGainPct >= 0 ? 'var(--green)' : (p==='pre' ? phaseMeta[p].dot : 'var(--red)');
+
+      let note;
+      if(p === 'pre'){
+        const someConfirmed = stocks.some(s=>s.info.confirmed);
+        note = someConfirmed
+          ? `除息前，目前${gainWord} ${pct(Math.abs(avgGainPct))>=0?'':''}${pct(avgGainPct)}，除息日確認後再評估是否加減碼`
+          : `除息日尚未公告確切日期，除息前維持持股`;
+      } else if(p === 'exed'){
+        const payDates = [...new Set(stocks.map(s=>s.info.payDate).filter(Boolean))];
+        const payLine = payDates.length ? `預計 ${payDates.join('、')} 發放` : '發放日待確認';
+        note = `已除息，${payLine}，目前${gainWord} ${pct(avgGainPct)}，除息後股利入帳可部分彌補帳損`;
+      } else {
+        note = `股利已入帳，目前${gainWord} ${pct(avgGainPct)}，${avgGainPct>=0?'可持續觀察是否停利':'追蹤填息進度，未填息前不建議加碼'}`;
+      }
+
+      return `<div class="ac-row"><div class="ac-dot" style="background:${dotColor}"></div><div>` +
+        `<div class="ac-name">${names} <span class="ac-tag" style="color:${p==='pre'?'var(--text3)':'var(--green-dk)'}">${phaseMeta[p].label}</span></div>` +
+        `<div class="ac-note">${note}</div></div></div>`;
+    }).join('');
+
+  body.innerHTML = rowsHtml || '<div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">無資料</div></div></div>';
+}
+
+/* -----------------------------------------------------------------
    自動月底比對按鈕：從歷史資料裡，抓出「每個月最後一筆有資料的交易日」
    並動態產生「對比 X/XX」按鈕，取代原本寫死的 c430/c529/c630
 ----------------------------------------------------------------- */
@@ -1014,6 +1089,7 @@ function update(){
   bgEl.className = 'v ' + (totalGain>=0?'pos':'neg');
   document.getElementById('bdpref-yield').textContent = pct(AVG_YIELD);
 
+  renderTimingCard(S);
   updateOverview();
 }
 
