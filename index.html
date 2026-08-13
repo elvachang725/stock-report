@@ -371,9 +371,9 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
       </div>
       <div class="ac">
         <div class="ac-head"><div class="ac-icon" style="background:var(--amber-lt)">🛡</div><span class="ac-title">停損 / 停利</span></div>
-        <div class="ac-row"><div class="ac-dot" style="background:var(--red)"></div><div><div class="ac-name">台泥乙特 <span class="ac-tag">停損 $41.5</span></div><div class="ac-note">距停損尚有緩衝，除息前安全</div></div></div>
-        <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">中信乙特 <span class="ac-tag">停利 $65.8</span></div><div class="ac-note">現價接近停利，可備限價單</div></div></div>
-        <div class="ac-row"><div class="ac-dot" style="background:var(--green)"></div><div><div class="ac-name">富邦乙特 <span class="ac-tag">停利 $64.3</span></div><div class="ac-note">帳利最大，持續關注</div></div></div>
+        <div id="alerts-body">
+          <div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">載入中...</div></div></div>
+        </div>
       </div>
     </div>
 
@@ -681,6 +681,18 @@ const BASE=[
   {code:"9941A",name:"裕融甲特",  shares:203000, cost:10287312, divY:0.046163, exDiv:"2026-09 預估",conf:false, c430:50.7, c529:50.30, c630:50.60},
 ];
 
+/* -----------------------------------------------------------------
+   到價通知門檻（停損 / 停利）
+   這裡的價位是人工設定的警戒線，不會被自動化邏輯覆蓋。
+   要調整某檔的停損/停利價，直接改這裡的數字即可；
+   卡片上的文字（距離、狀態）則會依即時股價自動計算與更新。
+----------------------------------------------------------------- */
+const PRICE_ALERTS = {
+  '1101B': { stopLoss: 41.5 },              // 台泥乙特
+  '2891B': { takeProfit: 65.8 },            // 中信乙特
+  '2881B': { takeProfit: 64.3 },            // 富邦乙特
+};
+
 const TOTAL_COST = BASE.reduce((a,s)=>a+s.cost,0);
 const TOTAL_DIV  = BASE.reduce((a,s)=>a+s.cost*s.divY,0);
 const AVG_YIELD  = TOTAL_DIV/TOTAL_COST;
@@ -842,6 +854,70 @@ function renderTimingCard(S){
         `<div class="ac-name">${names} <span class="ac-tag" style="color:${p==='pre'?'var(--text3)':'var(--green-dk)'}">${phaseMeta[p].label}</span></div>` +
         `<div class="ac-note">${note}</div></div></div>`;
     }).join('');
+
+  body.innerHTML = rowsHtml || '<div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">無資料</div></div></div>';
+}
+
+/* -----------------------------------------------------------------
+   動態「停損 / 停利」到價通知卡片
+   PRICE_ALERTS 裡的門檻價位固定不變（人工保留），
+   卡片文字（距離門檻多少%、是否已觸價）依即時收盤價自動計算。
+----------------------------------------------------------------- */
+function renderAlertsCard(S){
+  const body = document.getElementById('alerts-body');
+  if(!body) return;
+
+  const codes = Object.keys(PRICE_ALERTS);
+  if(!codes.length){
+    body.innerHTML = '<div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">尚未設定到價通知</div></div></div>';
+    return;
+  }
+
+  const rowsHtml = codes.map(code=>{
+    const s = S.find(x=>x.code===code);
+    if(!s) return '';
+    const alert = PRICE_ALERTS[code];
+    const close = s.close;
+
+    if(alert.stopLoss !== undefined){
+      const target = alert.stopLoss;
+      const distPct = (close - target) / target * 100; // 正值＝距停損還有多少緩衝
+      let dot, note;
+      if(close <= target){
+        dot = 'var(--red)';
+        note = `已跌破停損價 $${target.toFixed(1)}，建議評估執行停損`;
+      } else if(distPct <= 5){
+        dot = 'var(--amber)';
+        note = `距停損僅 ${distPct.toFixed(1)}%，請留意風險`;
+      } else {
+        dot = 'var(--red)';
+        note = `距停損尚有 ${distPct.toFixed(1)}% 緩衝，暫時安全`;
+      }
+      return `<div class="ac-row"><div class="ac-dot" style="background:${dot}"></div><div>` +
+        `<div class="ac-name">${s.name} <span class="ac-tag">停損 $${target.toFixed(1)}</span></div>` +
+        `<div class="ac-note">${note}（現價 $${close.toFixed(2)}）</div></div></div>`;
+    }
+
+    if(alert.takeProfit !== undefined){
+      const target = alert.takeProfit;
+      const distPct = (target - close) / close * 100; // 正值＝距停利還差多少
+      let dot, note;
+      if(close >= target){
+        dot = 'var(--green)';
+        note = `已達停利價 $${target.toFixed(1)}，建議評估執行停利`;
+      } else if(distPct <= 3){
+        dot = 'var(--green)';
+        note = `距停利僅 ${distPct.toFixed(1)}%，可備限價單`;
+      } else {
+        dot = 'var(--green)';
+        note = `距停利尚有 ${distPct.toFixed(1)}%，持續關注`;
+      }
+      return `<div class="ac-row"><div class="ac-dot" style="background:${dot}"></div><div>` +
+        `<div class="ac-name">${s.name} <span class="ac-tag">停利 $${target.toFixed(1)}</span></div>` +
+        `<div class="ac-note">${note}（現價 $${close.toFixed(2)}）</div></div></div>`;
+    }
+    return '';
+  }).join('');
 
   body.innerHTML = rowsHtml || '<div class="ac-row"><div class="ac-dot" style="background:var(--text3)"></div><div><div class="ac-name">無資料</div></div></div>';
 }
@@ -1090,6 +1166,7 @@ function update(){
   document.getElementById('bdpref-yield').textContent = pct(AVG_YIELD);
 
   renderTimingCard(S);
+  renderAlertsCard(S);
   updateOverview();
 }
 
