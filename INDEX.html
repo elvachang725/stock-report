@@ -107,6 +107,15 @@ tbody td:first-child{text-align:left;font-family:var(--font)}
 
 /* Chart */
 .chart-wrap{position:relative;width:100%}
+.chart-card{background:var(--surface);border-radius:10px;border:.5px solid var(--border);padding:14px 16px 12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.seg button{font-family:var(--font);font-size:12px;color:var(--text2);background:var(--bg);border:.5px solid var(--border2);border-radius:6px;padding:5px 11px;cursor:pointer}
+.seg button:hover{color:var(--text);border-color:var(--navy)}
+.seg button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.seg button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.chart-box{position:relative;height:320px}
+.chart-note{font-size:11px;color:var(--text3);margin-top:8px}
+@media(max-width:600px){.chart-box{height:240px}}
 
 /* Responsive */
 @media(max-width:800px){
@@ -202,6 +211,21 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
         <span style="color:var(--text3)">7–9 月除息，下半年集中入帳</span>
       </div>
     </div>
+  </div>
+
+  <!-- 圖表 -->
+  <div class="sec mb18">圖表</div>
+  <div class="chart-card mb24">
+    <div class="seg" id="chartSeg" role="tablist" aria-label="圖表切換">
+      <button type="button" data-chart="gain">未實現利得</button>
+      <button type="button" data-chart="gainPct">利得率</button>
+      <button type="button" data-chart="div">股利貢獻</button>
+      <button type="button" data-chart="mv">持股市值佔比</button>
+      <button type="button" data-chart="costMv">成本 vs 市值</button>
+      <button type="button" data-chart="yield">殖利率比較</button>
+    </div>
+    <div class="chart-box"><canvas id="mainChart" role="img" aria-label="特別股圖表"></canvas></div>
+    <div class="chart-note" id="chartNote"></div>
   </div>
 
   <!-- ④ 持股明細 -->
@@ -413,6 +437,67 @@ document.querySelectorAll('thead th[data-col]').forEach(th=>th.addEventListener(
   if(sc===c) sd*=-1; else{sc=c;sd=-1;}
   render();
 }));
+
+/* ---------- 圖表切換 ---------- */
+const C={navy:'#0D1B3E',gold:'#C8972A',green:'#1D9E75',red:'#D85A30',blue:'#185FA5',teal:'#0F7EA6',text2:'#64748B',grid:'#E2E8F0'};
+const PALETTE=['#0D1B3E','#185FA5','#0F7EA6','#1D9E75','#C8972A','#B07D1A','#D85A30','#993C1D','#5B6B8C','#7FA7D1','#8CC7B5','#E0B96A'];
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color=C.text2;
+const wan=n=>(n/1e4).toLocaleString('zh-TW',{maximumFractionDigits:1});
+const axisWan={ticks:{callback:v=>wan(v)+' 萬'},grid:{color:C.grid}};
+const axisPct={ticks:{callback:v=>(v*100).toFixed(1)+'%'},grid:{color:C.grid}};
+const noGrid={grid:{display:false}};
+const tm=S.reduce((a,s)=>a+s.close*s.shares,0);
+const avgY=td/tc;
+
+const CHARTS={
+  gain:()=>{const r=[...S].sort((a,b)=>b.gain-a.gain);return{
+    note:'單位：萬元。綠色為帳面利得、紅色為帳面損失（以 5/29 收盤價計算）。',
+    cfg:{type:'bar',data:{labels:r.map(s=>s.name),datasets:[{label:'未實現利得',data:r.map(s=>s.gain),backgroundColor:r.map(s=>s.gain>=0?C.green:C.red),borderRadius:3}]},
+      options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+sgn(c.raw)+fmtN(c.raw)+' 元'}}},scales:{y:axisWan,x:noGrid}}}}},
+  gainPct:()=>{const r=[...S].sort((a,b)=>b.gainPct-a.gainPct);return{
+    note:'各檔利得率由高到低排序；利得率 = 未實現利得 ÷ 投入成本。',
+    cfg:{type:'bar',data:{labels:r.map(s=>s.name),datasets:[{label:'利得率',data:r.map(s=>s.gainPct),backgroundColor:r.map(s=>s.gainPct>=0?C.green:C.red),borderRadius:3}]},
+      options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+pct(c.raw)}}},scales:{x:axisPct,y:noGrid}}}}},
+  div:()=>{const r=[...S].sort((a,b)=>b.annDiv-a.annDiv);return{
+    note:'預估年領股利合計 $'+fmtM(td)+'，各檔佔比。',
+    cfg:{type:'doughnut',data:{labels:r.map(s=>s.name),datasets:[{data:r.map(s=>s.annDiv),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:1}]},
+      options:{cutout:'55%',plugins:{legend:{position:innerWidth<600?'bottom':'right',labels:{boxWidth:10}},tooltip:{callbacks:{label:c=>' '+c.label+'：$'+fmtM(c.raw)+'（'+(c.raw/td*100).toFixed(1)+'%）'}}}}}}},
+  mv:()=>{const r=[...S].sort((a,b)=>b.close*b.shares-a.close*a.shares);return{
+    note:'5/29 總市值 $'+(tm/1e8).toFixed(3)+' 億，各檔佔比。',
+    cfg:{type:'doughnut',data:{labels:r.map(s=>s.name),datasets:[{data:r.map(s=>s.close*s.shares),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:1}]},
+      options:{cutout:'55%',plugins:{legend:{position:innerWidth<600?'bottom':'right',labels:{boxWidth:10}},tooltip:{callbacks:{label:c=>' '+c.label+'：'+wan(c.raw)+' 萬（'+(c.raw/tm*100).toFixed(1)+'%）'}}}}}}},
+  costMv:()=>{const r=[...S].sort((a,b)=>b.cost-a.cost);return{
+    note:'單位：萬元。藍色為投入成本、金色為 5/29 市值。',
+    cfg:{type:'bar',data:{labels:r.map(s=>s.name),datasets:[
+        {label:'投入成本',data:r.map(s=>s.cost),backgroundColor:C.blue,borderRadius:3},
+        {label:'5/29 市值',data:r.map(s=>s.close*s.shares),backgroundColor:C.gold,borderRadius:3}]},
+      options:{plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+'：'+fmtN(c.raw)+' 元'}}},scales:{y:axisWan,x:noGrid}}}}},
+  yield:()=>{const r=[...S].sort((a,b)=>b.divY-a.divY);return{
+    note:'虛線為加權平均殖利率 '+pct(avgY).replace('+','')+'（以投入成本加權）。',
+    cfg:{type:'bar',data:{labels:r.map(s=>s.name),datasets:[
+        {type:'bar',label:'殖利率',data:r.map(s=>s.divY),backgroundColor:r.map(s=>s.divY>=avgY?C.teal:'#9FC3D4'),borderRadius:3,order:2},
+        {type:'line',label:'平均殖利率',data:r.map(()=>avgY),borderColor:C.gold,borderDash:[5,4],borderWidth:1.5,pointRadius:0,order:1}]},
+      options:{plugins:{legend:{position:'top',align:'end',labels:{boxWidth:10}},tooltip:{callbacks:{label:c=>' '+c.dataset.label+'：'+(c.raw*100).toFixed(2)+'%'}}},
+        scales:{y:{...axisPct,min:0.025},x:noGrid}}}}}
+};
+
+const KEY='pref-chart-v1';
+let current='gain',chart=null;
+try{const k=localStorage.getItem(KEY);if(k&&CHARTS[k])current=k}catch(e){}
+function drawChart(k){
+  current=k;
+  try{localStorage.setItem(KEY,k)}catch(e){}
+  document.querySelectorAll('#chartSeg button').forEach(b=>{const on=b.dataset.chart===k;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+  const {cfg,note}=CHARTS[k]();
+  cfg.options={...cfg.options,responsive:true,maintainAspectRatio:false,animation:{duration:300}};
+  if(chart)chart.destroy();
+  chart=new Chart(document.getElementById('mainChart'),cfg);
+  document.getElementById('chartNote').textContent=note;
+}
+document.querySelectorAll('#chartSeg button').forEach(b=>b.addEventListener('click',()=>drawChart(b.dataset.chart)));
+drawChart(current);
 </script>
 </body>
 </html>
