@@ -184,29 +184,30 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 #panel-pref .snav.active .sn-sub{color:rgba(255,255,255,.75) !important}
 #panel-pref table.tblpref tbody tr[data-code]{cursor:pointer}
 
-/* 詳情：頁首主視覺 */
-#panel-pref .dt-hero{background:linear-gradient(135deg,var(--navy) 0%,#1B3366 100%);color:#fff;border-radius:14px;padding:22px 24px 18px;margin-bottom:20px;position:relative;overflow:hidden}
-#panel-pref .dt-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:rgba(200,151,42,.12)}
-#panel-pref .dt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;position:relative;z-index:1}
-#panel-pref .dt-title{font-size:26px;font-weight:500;line-height:1.2}
-#panel-pref .dt-code{font-size:13px;font-family:var(--mono);color:rgba(255,255,255,.55);margin-left:10px;font-weight:400}
-#panel-pref .dt-meta{font-size:12px;color:rgba(255,255,255,.6);margin-top:6px}
-#panel-pref .dt-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:rgba(255,255,255,.12);color:#fff;margin-right:6px}
-#panel-pref .dt-tag.gold{background:var(--gold);color:var(--navy);font-weight:500}
+/* 詳情：頁首（淺色版） */
+#panel-pref .dt-hero{background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:22px 24px 20px;margin-bottom:16px;box-shadow:0 1px 3px rgba(13,27,62,.05);border-top:3px solid var(--navy)}
+#panel-pref .dt-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+#panel-pref .dt-title{font-size:24px;font-weight:500;line-height:1.2;color:var(--navy)}
+#panel-pref .dt-code{font-size:13px;font-family:var(--mono);color:var(--text3);margin-left:10px;font-weight:400}
+#panel-pref .dt-meta{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap}
+#panel-pref .dt-tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;background:#EEF2F7;color:var(--text2)}
+#panel-pref .dt-tag.gold{background:#F7EEDC;color:var(--amber-dk)}
 #panel-pref .dt-btns{display:flex;gap:6px;flex-wrap:wrap}
-#panel-pref .dt-btn{padding:6px 12px;border-radius:999px;border:.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);font-size:12px;cursor:pointer;color:#fff;font-family:var(--font);transition:background .15s}
-#panel-pref .dt-btn:hover{background:rgba(255,255,255,.18)}
-#panel-pref .dt-price-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:18px 0 16px;position:relative;z-index:1}
-#panel-pref .dt-price{font-size:44px;font-weight:500;font-family:var(--mono);line-height:1;letter-spacing:-.02em}
-#panel-pref .dt-chg{display:inline-flex;padding:5px 12px;border-radius:999px;font-size:14px;font-weight:500;font-family:var(--mono)}
-#panel-pref .dt-chg.up{background:rgba(29,158,117,.22);color:#7FE0BE}
-#panel-pref .dt-chg.dn{background:rgba(216,90,48,.22);color:#FFB49A}
-#panel-pref .dt-vs{font-size:12px;color:rgba(255,255,255,.6)}
-#panel-pref .dt-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.12);border-radius:10px;overflow:hidden;position:relative;z-index:1}
-#panel-pref .dt-stat{background:rgba(13,27,62,.55);padding:12px 14px}
-#panel-pref .dt-stat .k{font-size:11px;color:rgba(255,255,255,.55);letter-spacing:.04em;margin-bottom:4px}
-#panel-pref .dt-stat .v{font-size:18px;font-weight:500;font-family:var(--mono)}
-#panel-pref .dt-stat .s{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;font-family:var(--mono)}
+#panel-pref .dt-btn{padding:6px 13px;border-radius:999px;border:.5px solid var(--border2);background:var(--surface);font-size:12px;cursor:pointer;color:var(--text2);font-family:var(--font);transition:all .15s}
+#panel-pref .dt-btn:hover{border-color:var(--navy);color:var(--navy)}
+#panel-pref .dt-btn.close{background:var(--navy);border-color:var(--navy);color:#fff}
+#panel-pref .dt-price-row{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:18px 0 18px}
+#panel-pref .dt-price{font-size:40px;font-weight:500;font-family:var(--mono);line-height:1;letter-spacing:-.02em;color:var(--navy)}
+#panel-pref .dt-chg{display:inline-flex;padding:4px 11px;border-radius:6px;font-size:13px;font-weight:500;font-family:var(--mono)}
+#panel-pref .dt-chg.up{background:var(--green-lt);color:var(--green-dk)}
+#panel-pref .dt-chg.dn{background:var(--red-lt);color:var(--red-dk)}
+#panel-pref .dt-vs{font-size:12px;color:var(--text3)}
+#panel-pref .dt-stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--bg);border-radius:10px;border:.5px solid var(--border)}
+#panel-pref .dt-stat{padding:13px 16px;border-left:.5px solid var(--border)}
+#panel-pref .dt-stat:first-child{border-left:none}
+#panel-pref .dt-stat .k{font-size:11px;color:var(--text3);letter-spacing:.04em;margin-bottom:4px}
+#panel-pref .dt-stat .v{font-size:18px;font-weight:500;font-family:var(--mono);color:var(--text)}
+#panel-pref .dt-stat .s{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
 
 /* 詳情：內容卡片 */
 #panel-pref .dt-layout{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-bottom:16px;align-items:start}
@@ -253,7 +254,9 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
   #panel-pref .dt-chart{height:210px}#panel-pref .dt-chart.tall{height:230px}
   #panel-pref .dt-card-h{flex-wrap:wrap}
   #panel-pref .dt-stats{grid-template-columns:1fr 1fr}
-  #panel-pref .dt-price{font-size:36px}
+  #panel-pref .dt-stat:nth-child(3){border-left:none}
+  #panel-pref .dt-stat:nth-child(n+3){border-top:.5px solid var(--border)}
+  #panel-pref .dt-price{font-size:32px}
   #panel-pref .dt-hero{padding:18px 16px 14px}
   #panel-pref .dt-title{font-size:22px}
 }
@@ -1567,15 +1570,15 @@ function drawDetailCharts(s, ctx){
   const pts = priceSeries(s);
   const el1 = document.getElementById('dtc-price');
   if(el1 && pts.length >= 2){
-    const g = el1.getContext('2d').createLinearGradient(0,0,0,260);
+    const g = el1.getContext('2d').createLinearGradient(0,0,0,280);
     const up = s.close >= s.avgCost;
-    g.addColorStop(0, up?'rgba(29,158,117,.22)':'rgba(216,90,48,.20)'); g.addColorStop(1,'rgba(255,255,255,0)');
+    g.addColorStop(0,'rgba(24,95,165,.16)'); g.addColorStop(1,'rgba(24,95,165,0)');
     const ref = (label,v,color)=>({label, data:pts.map(()=>v), borderColor:color, borderDash:[6,4], borderWidth:1.4, pointRadius:0, pointHoverRadius:0, fill:false, tension:0});
-    const ds = [{label:'收盤價', data:pts.map(p=>p.v), borderColor:up?CC.green:CC.red, backgroundColor:g, fill:true, borderWidth:2, tension:.25,
+    const ds = [{label:'收盤價', data:pts.map(p=>p.v), borderColor:CC.blue, backgroundColor:g, fill:true, borderWidth:2, tension:.25,
       pointRadius:pts.map((_,i)=>i===pts.length-1?4:0), pointHoverRadius:5, pointBackgroundColor:up?CC.green:CC.red, pointBorderColor:'#fff', pointBorderWidth:1.5},
       ref('平均成本', s.avgCost, CC.gold)];
     if(al.stopLoss!==undefined) ds.push(ref('停損', al.stopLoss, CC.red));
-    if(al.takeProfit!==undefined) ds.push(ref('停利', al.takeProfit, CC.teal));
+    if(al.takeProfit!==undefined) ds.push(ref('停利', al.takeProfit, CC.green));
     DT_CHARTS.price = new Chart(el1, {type:'line', data:{labels:pts.map(p=>p.d), datasets:ds},
       options:{responsive:true, maintainAspectRatio:false, animation:{duration:250}, interaction:{mode:'index',intersect:false},
         plugins:{legend:legendTop, tooltip:{callbacks:{label:c=>' '+c.dataset.label+'：$'+c.raw.toFixed(2),
@@ -1590,7 +1593,7 @@ function drawDetailCharts(s, ctx){
     const vals=[s.gain, s.annDiv, s.inclGain];
     DT_CHARTS.incl = new Chart(el2, {type:'bar', plugins:[dtValueLabelPlugin],
       data:{labels:['價差損益','已領股利','含息損益'], datasets:[{data:vals,
-        backgroundColor:[s.gain>=0?CC.green:CC.red, CC.gold, s.inclGain>=0?CC.navy:CC.red], borderRadius:6, maxBarThickness:46}]},
+        backgroundColor:[s.gain>=0?CC.green:CC.red, CC.gold, CC.navy], borderRadius:6, maxBarThickness:46}]},
       options:{responsive:true, maintainAspectRatio:false, animation:{duration:250},
         plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+kTxt(c.raw)}}, dtValueLabel:{fmt:v=>(v>=0?'+':'')+fmtK(v)}},
         scales:{y:{...kAxis, grace:'15%', border:{display:false}}, x:{grid:{display:false}}}}});
@@ -1604,7 +1607,7 @@ function drawDetailCharts(s, ctx){
     DT_CHARTS.cmp = new Chart(el3, {type:'bar', plugins:[dtValueLabelPlugin],
       data:{labels:['價差率','實收殖利率','含息報酬率'], datasets:[
         {label:s.name, data:mine, backgroundColor:CC.navy, borderRadius:5, maxBarThickness:34},
-        {label:'組合平均', data:avg, backgroundColor:'#C9D6E8', borderRadius:5, maxBarThickness:34}]},
+        {label:'組合平均', data:avg, backgroundColor:'#C5CEDB', borderRadius:5, maxBarThickness:34}]},
       options:{responsive:true, maintainAspectRatio:false, animation:{duration:250},
         plugins:{legend:legendTop, tooltip:{callbacks:{label:c=>' '+c.dataset.label+'：'+pct(c.raw)}}, dtValueLabel:{fmt:v=>(v*100).toFixed(1)+'%'}},
         scales:{y:{...pAxis, grace:'15%', border:{display:false}}, x:{grid:{display:false}}}}});
@@ -1673,7 +1676,7 @@ function renderDetail(code){
       <div class="dt-btns">
         <button class="dt-btn" data-go="${prevCode}">‹ ${STOCK_NAMES[prevCode]}</button>
         <button class="dt-btn" data-go="${nextCode}">${STOCK_NAMES[nextCode]} ›</button>
-        <button class="dt-btn" data-go="">✕ 回總覽</button>
+        <button class="dt-btn close" data-go="">回總覽</button>
       </div>
     </div>
     <div class="dt-price-row">
@@ -1685,7 +1688,7 @@ function renderDetail(code){
       <div class="dt-stat"><div class="k">持有股數</div><div class="v">${fmtN(s.shares)}</div><div class="s">均價 $${s.avgCost.toFixed(2)}</div></div>
       <div class="dt-stat"><div class="k">目前市值</div><div class="v">$${fmtK(mkt)} 仟</div><div class="s">成本 $${fmtK(s.cost)} 仟</div></div>
       <div class="dt-stat"><div class="k">實收殖利率</div><div class="v">${pct(s.divY).replace('+','')}</div><div class="s">已領 $${fmtK(s.annDiv)} 仟</div></div>
-      <div class="dt-stat"><div class="k">含息報酬率</div><div class="v" style="color:${s.totalReturn>=0?'#7FE0BE':'#FFB49A'}">${pct(s.totalReturn)}</div><div class="s">含息 ${sMoney(s.inclGain)} 仟</div></div>
+      <div class="dt-stat"><div class="k">含息報酬率</div><div class="v" style="color:${s.totalReturn>=0?'var(--green-dk)':'var(--red-dk)'}">${pct(s.totalReturn)}</div><div class="s">含息 ${sMoney(s.inclGain)} 仟</div></div>
     </div>
   </div>
 
@@ -1772,8 +1775,8 @@ function updateOverview(){
    ④ 圖表切換 — 三個頁籤各一組，資料更新時自動重畫
    新增圖表：在 CHART_DEFS 對應頁籤加一個 { key, label, build } 即可
 ===================================================================== */
-const CC = {navy:'#0D1B3E',gold:'#C8972A',green:'#1D9E75',red:'#D85A30',blue:'#185FA5',teal:'#0F7EA6',light:'#9FC3D4',grid:'#E2E8F0',text2:'#64748B'};
-const PALETTE = ['#0D1B3E','#185FA5','#0F7EA6','#1D9E75','#C8972A','#B07D1A','#D85A30','#993C1D','#5B6B8C','#7FA7D1','#8CC7B5','#E0B96A'];
+const CC = {navy:'#0D1B3E',gold:'#C8972A',green:'#1D9E75',red:'#D85A30',blue:'#185FA5',teal:'#0F7EA6',light:'#B9D3E0',grid:'#E2E8F0',text2:'#64748B'};
+const PALETTE = ['#0D1B3E','#24407A','#185FA5','#4A84C4','#0F7EA6','#5AA9C4','#1D9E75','#6CC3A5','#C8972A','#E2BE74','#7D8BA3','#C5CEDB'];
 const kAxis = {ticks:{callback:v=>((Math.round(v/1000))||0).toLocaleString('en-US')+' 仟'},grid:{color:CC.grid}};
 const pAxis = {ticks:{callback:v=>(v*100).toFixed(1)+'%'},grid:{color:CC.grid}};
 const noGrid = {grid:{display:false}};
