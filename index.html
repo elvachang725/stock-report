@@ -209,7 +209,7 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 #panel-pref .dt-stat .s{font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;font-family:var(--mono)}
 
 /* 詳情：內容卡片 */
-#panel-pref .dt-layout{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-bottom:16px}
+#panel-pref .dt-layout{display:grid;grid-template-columns:1.15fr 1fr;gap:16px;margin-bottom:16px;align-items:start}
 #panel-pref .dt-col{display:flex;flex-direction:column;gap:16px}
 #panel-pref .dt-card{background:var(--surface);border-radius:12px;border:.5px solid var(--border);padding:18px 20px;box-shadow:0 1px 3px rgba(13,27,62,.04)}
 #panel-pref .dt-card-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
@@ -238,9 +238,20 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 #panel-pref .lv-note{background:var(--navy);color:#fff}
 #panel-pref .adv-t{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
 #panel-pref .adv-n{font-size:13px;color:var(--text2);line-height:1.6}
+#panel-pref .dt-wide{margin-bottom:16px}
+#panel-pref .dt-chart{position:relative;height:230px}
+#panel-pref .dt-chart.tall{height:280px}
+#panel-pref .dt-cap{font-size:11px;color:var(--text3);margin-top:10px;line-height:1.5}
+#panel-pref .dt-range{display:flex;gap:2px;background:#EEF2F7;border-radius:8px;padding:3px}
+#panel-pref .dt-range button{border:none;background:transparent;font-family:var(--font);font-size:12px;color:var(--text2);padding:4px 11px;border-radius:6px;cursor:pointer}
+#panel-pref .dt-range button.on{background:#fff;color:var(--navy);font-weight:500;box-shadow:0 1px 3px rgba(13,27,62,.12)}
+#panel-pref .dt-sum{display:flex;gap:4px}
+#panel-pref .dt-sum span{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500}
 #panel-pref .dt-note{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.6}
 @media(max-width:800px){
   #panel-pref .dt-layout{grid-template-columns:1fr}
+  #panel-pref .dt-chart{height:210px}#panel-pref .dt-chart.tall{height:230px}
+  #panel-pref .dt-card-h{flex-wrap:wrap}
   #panel-pref .dt-stats{grid-template-columns:1fr 1fr}
   #panel-pref .dt-price{font-size:36px}
   #panel-pref .dt-hero{padding:18px 16px 14px}
@@ -253,11 +264,11 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 }
 
 /* ---------- 圖表切換 ---------- */
-.chart-card{background:var(--surface);border-radius:10px;border:.5px solid var(--border);padding:14px 16px 12px}
-.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.seg button{font-family:var(--font);font-size:12px;color:var(--text2);background:var(--bg);border:.5px solid var(--border2);border-radius:6px;padding:5px 11px;cursor:pointer}
-.seg button:hover{color:var(--text);border-color:var(--navy)}
-.seg button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.chart-card{background:var(--surface);border-radius:12px;border:.5px solid var(--border);padding:16px 18px 14px;box-shadow:0 1px 3px rgba(13,27,62,.04)}
+.seg{display:inline-flex;flex-wrap:wrap;gap:2px;margin-bottom:14px;background:#EEF2F7;border-radius:9px;padding:3px}
+.seg button{font-family:var(--font);font-size:12px;color:var(--text2);background:transparent;border:none;border-radius:7px;padding:5px 12px;cursor:pointer;transition:all .15s}
+.seg button:hover{color:var(--navy)}
+.seg button.on{background:#fff;color:var(--navy);font-weight:500;box-shadow:0 1px 3px rgba(13,27,62,.12)}
 .seg button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .chart-box{position:relative;height:320px}
 .chart-note{font-size:11px;color:var(--text3);margin-top:8px}
@@ -1535,37 +1546,85 @@ function buildAdvice(s, info, ctx){
   return out;
 }
 
-// 價格走勢小圖（SVG，資料來自 Apps Script 每日存檔 + 目前價格）
-function buildSpark(s){
+/* ---------- 個股詳情：互動圖表（Chart.js） ---------- */
+const DT_CHARTS = {};
+const DT_RANGES = [['1M',22],['3M',66],['6M',132],['全部',0]];
+prefState.range = prefState.range || 66;
+
+function priceSeries(s){
   const pts = historyData.filter(r=>r[s.code]!==undefined && r[s.code]!=='' && !isNaN(parseFloat(r[s.code])))
-    .slice(-90).map(r=>({d:r.date, v:parseFloat(r[s.code])}));
+    .map(r=>({d:r.date.substring(5).replace('-','/'), v:parseFloat(r[s.code])}));
   pts.push({d:'現在', v:s.close});
-  if(pts.length < 3) return '<div style="font-size:12px;color:var(--text3);padding:20px 0">歷史價格資料不足，無法繪製走勢</div>';
-  const al = PRICE_ALERTS[s.code] || {};
-  const refs = [s.avgCost, al.stopLoss, al.takeProfit].filter(v=>v!==undefined);
-  const vals = pts.map(p=>p.v).concat(refs);
-  let lo=Math.min(...vals), hi=Math.max(...vals);
-  const pad=(hi-lo)*0.12||0.5; lo-=pad; hi+=pad;
-  const box=document.getElementById('pref-detail');
-  const W=Math.max(300,Math.min(720,(box&&box.clientWidth?box.clientWidth*0.55:640))),H=170,L=40,R=8,T=8,B=20;
-  const x=i=>L+(W-L-R)*i/(pts.length-1);
-  const y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
-  const line=pts.map((p,i)=>`${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
-  const hline=(v,color,dash)=>`<line x1="${L}" x2="${W-R}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}" stroke="${color}" stroke-width="1.2" ${dash?'stroke-dasharray="4 3"':''}/>`;
-  const ticks=[hi-pad, (hi+lo)/2, lo+pad].map(v=>`<text x="${L-6}" y="${(y(v)+4).toFixed(1)}" font-size="10" text-anchor="end" fill="#94A3B8" font-family="DM Mono">${v.toFixed(1)}</text>`).join('');
-  const last=pts[pts.length-1];
-  return `<div class="spark-wrap"><svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block;height:auto">
-    ${ticks}
-    ${hline(s.avgCost,'#C8972A',true)}
-    ${al.stopLoss!==undefined?hline(al.stopLoss,'#D85A30',true):''}
-    ${al.takeProfit!==undefined?hline(al.takeProfit,'#1D9E75',true):''}
-    <polyline points="${line}" fill="none" stroke="#0D1B3E" stroke-width="1.8" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
-    <circle cx="${x(pts.length-1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="${s.gain>=0?'#1D9E75':'#D85A30'}"/>
-    <text x="${L}" y="${H-4}" font-size="10" fill="#94A3B8" font-family="DM Mono">${pts[0].d}</text>
-    <text x="${W-R}" y="${H-4}" font-size="10" fill="#94A3B8" text-anchor="end" font-family="DM Mono">現在</text>
-  </svg></div>
-  <div class="spark-legend"><span><i style="background:#0D1B3E"></i>收盤價</span><span><i style="background:#C8972A"></i>平均成本 $${s.avgCost.toFixed(2)}</span>${al.stopLoss!==undefined?`<span><i style="background:#D85A30"></i>停損 $${al.stopLoss}</span>`:''}${al.takeProfit!==undefined?`<span><i style="background:#1D9E75"></i>停利 $${al.takeProfit}</span>`:''}</div>`;
+  return prefState.range ? pts.slice(-prefState.range) : pts;
 }
+
+function drawDetailCharts(s, ctx){
+  Object.values(DT_CHARTS).forEach(c=>c && c.destroy());
+  if(typeof Chart==='undefined') return;
+  const al = PRICE_ALERTS[s.code] || {};
+
+  // ① 價格走勢：收盤價（面積）＋平均成本／停損／停利參考線
+  const pts = priceSeries(s);
+  const el1 = document.getElementById('dtc-price');
+  if(el1 && pts.length >= 2){
+    const g = el1.getContext('2d').createLinearGradient(0,0,0,260);
+    const up = s.close >= s.avgCost;
+    g.addColorStop(0, up?'rgba(29,158,117,.22)':'rgba(216,90,48,.20)'); g.addColorStop(1,'rgba(255,255,255,0)');
+    const ref = (label,v,color)=>({label, data:pts.map(()=>v), borderColor:color, borderDash:[6,4], borderWidth:1.4, pointRadius:0, pointHoverRadius:0, fill:false, tension:0});
+    const ds = [{label:'收盤價', data:pts.map(p=>p.v), borderColor:up?CC.green:CC.red, backgroundColor:g, fill:true, borderWidth:2, tension:.25,
+      pointRadius:pts.map((_,i)=>i===pts.length-1?4:0), pointHoverRadius:5, pointBackgroundColor:up?CC.green:CC.red, pointBorderColor:'#fff', pointBorderWidth:1.5},
+      ref('平均成本', s.avgCost, CC.gold)];
+    if(al.stopLoss!==undefined) ds.push(ref('停損', al.stopLoss, CC.red));
+    if(al.takeProfit!==undefined) ds.push(ref('停利', al.takeProfit, CC.teal));
+    DT_CHARTS.price = new Chart(el1, {type:'line', data:{labels:pts.map(p=>p.d), datasets:ds},
+      options:{responsive:true, maintainAspectRatio:false, animation:{duration:250}, interaction:{mode:'index',intersect:false},
+        plugins:{legend:legendTop, tooltip:{callbacks:{label:c=>' '+c.dataset.label+'：$'+c.raw.toFixed(2),
+          afterBody:items=>{ const v=items[0].raw; const d=v/s.avgCost-1; return ['距平均成本 '+pct(d)]; }}}},
+        scales:{y:{grace:'8%', ticks:{callback:v=>'$'+v.toFixed(1)}, grid:{color:CC.grid}, border:{display:false}},
+                x:{grid:{display:false}, ticks:{maxTicksLimit:7, maxRotation:0}}}}});
+  }
+
+  // ② 含息損益組成：價差 ＋ 已領股利 ＝ 含息損益
+  const el2 = document.getElementById('dtc-incl');
+  if(el2){
+    const vals=[s.gain, s.annDiv, s.inclGain];
+    DT_CHARTS.incl = new Chart(el2, {type:'bar', plugins:[dtValueLabelPlugin],
+      data:{labels:['價差損益','已領股利','含息損益'], datasets:[{data:vals,
+        backgroundColor:[s.gain>=0?CC.green:CC.red, CC.gold, s.inclGain>=0?CC.navy:CC.red], borderRadius:6, maxBarThickness:46}]},
+      options:{responsive:true, maintainAspectRatio:false, animation:{duration:250},
+        plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+kTxt(c.raw)}}, dtValueLabel:{fmt:v=>(v>=0?'+':'')+fmtK(v)}},
+        scales:{y:{...kAxis, grace:'15%', border:{display:false}}, x:{grid:{display:false}}}}});
+  }
+
+  // ③ 與組合平均比較：價差率／實收殖利率／含息報酬率
+  const el3 = document.getElementById('dtc-cmp');
+  if(el3){
+    const S = prefState.S, tg = S.reduce((a,x)=>a+x.gain,0);
+    const mine=[s.gainPct, s.divY, s.totalReturn], avg=[tg/TOTAL_COST, AVG_YIELD, (tg+TOTAL_DIV)/TOTAL_COST];
+    DT_CHARTS.cmp = new Chart(el3, {type:'bar', plugins:[dtValueLabelPlugin],
+      data:{labels:['價差率','實收殖利率','含息報酬率'], datasets:[
+        {label:s.name, data:mine, backgroundColor:CC.navy, borderRadius:5, maxBarThickness:34},
+        {label:'組合平均', data:avg, backgroundColor:'#C9D6E8', borderRadius:5, maxBarThickness:34}]},
+      options:{responsive:true, maintainAspectRatio:false, animation:{duration:250},
+        plugins:{legend:legendTop, tooltip:{callbacks:{label:c=>' '+c.dataset.label+'：'+pct(c.raw)}}, dtValueLabel:{fmt:v=>(v*100).toFixed(1)+'%'}},
+        scales:{y:{...pAxis, grace:'15%', border:{display:false}}, x:{grid:{display:false}}}}});
+  }
+}
+
+// 長條圖頂端數值標籤（僅個股詳情圖表啟用：options.plugins.dtValueLabel）
+const dtValueLabelPlugin = {
+  id:'dtValueLabel',
+  afterDatasetsDraw(chart, args, opts){
+    if(!opts || !opts.fmt) return;
+    const {ctx} = chart;
+    ctx.save(); ctx.font = "500 11px 'DM Mono',monospace"; ctx.textAlign='center'; ctx.fillStyle='#1E293B';
+    chart.data.datasets.forEach((ds,di)=>{
+      const meta = chart.getDatasetMeta(di); if(meta.hidden) return;
+      meta.data.forEach((bar,i)=>{ const v=ds.data[i]; const yy = v>=0 ? bar.y-6 : bar.y+14; ctx.fillText(opts.fmt(v), bar.x, yy); });
+    });
+    ctx.restore();
+  }
+};
 
 const sMoney=n=>(n>=0?'+':'-')+'$'+fmtK(Math.abs(n));
 const ADV_LEVEL = {
@@ -1585,11 +1644,8 @@ function renderDetail(code){
   const baseIdx = BASE.findIndex(b=>b.code===code);
   const prevPrice = prefState.prevPrices ? prefState.prevPrices[baseIdx] : null;
   const ctx = {
-    costShare: s.cost/TOTAL_COST,
-    divShare: s.annDiv/TOTAL_DIV,
-    mktShare: mkt/totalMkt,
-    prevPrice,
-    gainDelta: prevPrice ? (s.close-prevPrice)*s.shares : 0,
+    costShare: s.cost/TOTAL_COST, divShare: s.annDiv/TOTAL_DIV, mktShare: mkt/totalMkt,
+    prevPrice, gainDelta: prevPrice ? (s.close-prevPrice)*s.shares : 0,
     fill: calcFill(code, info, s.close),
   };
   const advice = buildAdvice(s, info, ctx);
@@ -1603,15 +1659,16 @@ function renderDetail(code){
   const wt=(label,v,color)=>`<div class="wt"><div class="wt-h"><span class="l">${label}</span><span class="v">${(v*100).toFixed(1)}%</span></div><div class="wbar"><div style="width:${Math.min(100,v/0.25*100).toFixed(1)}%;background:${color}"></div></div></div>`;
   const row=(l,v,style='')=>`<div class="dt-row"><span class="l">${l}</span><span class="v" style="${style}">${v}</span></div>`;
   const fillTxt = ctx.fill ? (ctx.fill.filled ? '<span class="pos">已填息</span>' : Math.max(0,ctx.fill.ratio*100).toFixed(0)+'%') : '—';
+  const counts = {good:0,warn:0,risk:0};
+  advice.forEach(a=>{ const lv=(ADV_LEVEL[a.dot]||[])[0]; if(lv==='lv-good')counts.good++; else if(lv==='lv-warn')counts.warn++; else if(lv==='lv-risk')counts.risk++; });
+  const head=(icon,bg,t,sub='')=>`<div class="dt-card-h"><div class="dt-card-t"><span class="ic" style="background:${bg}">${icon}</span>${t}</div>${sub}</div>`;
 
   det.innerHTML = `
   <div class="dt-hero">
     <div class="dt-top">
       <div>
         <div class="dt-title">${s.name}<span class="dt-code">${s.code}</span></div>
-        <div class="dt-meta">
-          <span class="dt-tag gold">成本第 ${rank} 大</span><span class="dt-tag">${phaseLbl}</span><span class="dt-tag">${info.confirmed?'除息日已確認':'除息日預估'}</span>
-        </div>
+        <div class="dt-meta"><span class="dt-tag gold">成本第 ${rank} 大</span><span class="dt-tag">${phaseLbl}</span><span class="dt-tag">占組合 ${(ctx.costShare*100).toFixed(1)}%</span></div>
       </div>
       <div class="dt-btns">
         <button class="dt-btn" data-go="${prevCode}">‹ ${STOCK_NAMES[prevCode]}</button>
@@ -1632,45 +1689,59 @@ function renderDetail(code){
     </div>
   </div>
 
+  <div class="dt-card dt-wide">
+    ${head('📈','#EEF2F7','價格走勢', `<div class="dt-range">${DT_RANGES.map(([l,n])=>`<button data-range="${n}" class="${prefState.range===n?'on':''}">${l}</button>`).join('')}</div>`)}
+    <div class="dt-chart tall"><canvas id="dtc-price"></canvas></div>
+    <div class="dt-cap">收盤價（實線）與平均成本 $${s.avgCost.toFixed(2)}（金色虛線）${PRICE_ALERTS[code]?'、到價警戒線':''}。游標移到線上可看每日價格與距成本幅度。</div>
+  </div>
+
   <div class="dt-layout">
-    <div class="dt-col">
-      <div class="dt-card">
-        <div class="dt-card-h"><div class="dt-card-t"><span class="ic" style="background:var(--blue-lt)">💡</span>觀察與建議</div><span class="dt-card-sub">${advice.length} 項</span></div>
-        ${advice.map(a=>{ const lv=ADV_LEVEL[a.dot]||ADV_LEVEL['var(--text3)'];
-          return `<div class="adv"><span class="adv-lv ${lv[0]}">${lv[1]}</span><div><div class="adv-t">${a.title}</div><div class="adv-n">${a.note}</div></div></div>`; }).join('')}
-      </div>
-      <div class="dt-card">
-        <div class="dt-card-h"><div class="dt-card-t"><span class="ic" style="background:#EEF2F7">📈</span>價格走勢</div><span class="dt-card-sub">近 90 個交易日</span></div>
-        ${buildSpark(s)}
-      </div>
+    <div class="dt-card">
+      ${head('💰','var(--green-lt)','含息損益組成','<span class="dt-card-sub">單位：仟元</span>')}
+      <div class="dt-chart"><canvas id="dtc-incl"></canvas></div>
+      <div class="dt-cap">價差（已除息，股價已扣股利）＋ 2026 已領股利 ＝ 含息損益</div>
+    </div>
+    <div class="dt-card">
+      ${head('📊','var(--blue-lt)','與組合平均比較')}
+      <div class="dt-chart"><canvas id="dtc-cmp"></canvas></div>
+      <div class="dt-cap">深藍為本檔，淺藍為 12 檔組合平均（以成本加權）</div>
+    </div>
+  </div>
+
+  <div class="dt-layout">
+    <div class="dt-card">
+      ${head('💡','var(--blue-lt)','觀察與建議', `<span class="dt-sum">${counts.good?`<span class="lv-good">正面 ${counts.good}</span>`:''}${counts.warn?`<span class="lv-warn">留意 ${counts.warn}</span>`:''}${counts.risk?`<span class="lv-risk">風險 ${counts.risk}</span>`:''}</span>`)}
+      ${advice.map(a=>{ const lv=ADV_LEVEL[a.dot]||ADV_LEVEL['var(--text3)'];
+        return `<div class="adv"><span class="adv-lv ${lv[0]}">${lv[1]}</span><div><div class="adv-t">${a.title}</div><div class="adv-n">${a.note}</div></div></div>`; }).join('')}
     </div>
     <div class="dt-col">
       <div class="dt-card">
-        <div class="dt-card-h"><div class="dt-card-t"><span class="ic" style="background:var(--green-lt)">💰</span>部位與股利</div></div>
+        ${head('🧾','#EEF2F7','部位明細')}
         ${row('投入成本','$'+fmtK(s.cost)+' 仟元')}
         ${row('目前市值','$'+fmtK(mkt)+' 仟元')}
         ${row('價差損益（未實現）',sMoney(s.gain)+' 仟元','color:'+(up?'var(--green)':'var(--red)'))}
-        ${row('已領股利（2026 年度）','$'+fmtK(s.annDiv)+' 仟元','color:var(--green)')}
+        ${row('已領股利（2026 年度）','$'+fmtK(s.annDiv)+' 仟元','color:var(--gold)')}
         ${row('含息總損益',sMoney(s.inclGain)+' 仟元','font-weight:600;color:'+(s.inclGain>=0?'var(--green)':'var(--red)'))}
-        ${row('平均每月股利','$'+fmtK(s.annDiv/12)+' 仟元')}
-        ${ctx.prevPrice?row('較 '+prefState.prevLabel+' 利得變化',sMoney(ctx.gainDelta)+' 仟元','color:'+(ctx.gainDelta>=0?'var(--green)':'var(--red)')):''}
+        ${ctx.prevPrice?row('較 '+prefState.prevLabel+' 價差變化',sMoney(ctx.gainDelta)+' 仟元','color:'+(ctx.gainDelta>=0?'var(--green)':'var(--red)')):''}
       </div>
       <div class="dt-card">
-        <div class="dt-card-h"><div class="dt-card-t"><span class="ic" style="background:var(--amber-lt)">📅</span>除息資訊</div><span class="bdg2 ${info.confirmed?'bdg-conf':'bdg-est'}">${info.confirmed?'已確認':'預估'}</span></div>
+        ${head('📅','var(--amber-lt)','除息資訊',`<span class="bdg2 ${info.confirmed?'bdg-conf':'bdg-est'}">${info.confirmed?'已確認':'預估'}</span>`)}
         ${row('除息日', info.date?String(info.date).substring(0, info.confirmed?10:20):'—')}
         ${row('每股配息', RECEIVED_DIV[code]?'$'+RECEIVED_DIV[code].perShare:(info.divAmount?'$'+info.divAmount:'—'))}
         ${row('發放日', s.payDate||'—')}
         ${row('填息狀況', fillTxt)}
       </div>
       <div class="dt-card">
-        <div class="dt-card-h"><div class="dt-card-t"><span class="ic" style="background:#EEF2F7">⚖</span>占組合比重</div><span class="dt-card-sub">滿格 = 25%</span></div>
+        ${head('⚖','#EEF2F7','占組合比重','<span class="dt-card-sub">滿格 = 25%</span>')}
         ${wt('成本占比',ctx.costShare,'var(--navy)')}
         ${wt('市值占比',ctx.mktShare,'var(--blue)')}
-        ${wt('股利貢獻占比',ctx.divShare,'var(--green)')}
+        ${wt('股利貢獻占比',ctx.divShare,'var(--gold)')}
       </div>
     </div>
   </div>
   <div class="dt-note">資料更新：${lastUpdated}　｜　價差＝市值−成本（已除息，股價已扣除股利）；含息損益＝價差＋已領股利。建議內容依目前價格、成本、實收股利與除息資料以規則自動產生，屬一般性觀察，非個人化投資建議；實際操作請綜合評估。</div>`;
+
+  drawDetailCharts(s, ctx);
 }
 
 function bindPrefDetail(){
@@ -1679,6 +1750,7 @@ function bindPrefDetail(){
   });
   document.getElementById('pref-detail').addEventListener('click', e=>{
     const b = e.target.closest('[data-go]'); if(b) openDetail(b.dataset.go);
+    const r = e.target.closest('[data-range]'); if(r){ prefState.range=parseInt(r.dataset.range); renderDetail(prefState.current); }
   });
   document.getElementById('tbody').addEventListener('click', e=>{
     const tr = e.target.closest('tr[data-code]'); if(tr) openDetail(tr.dataset.code);
@@ -1714,8 +1786,8 @@ function bar(labels, data, colors, label){
   return {type:'bar', data:{labels, datasets:[{label:label||'', data, backgroundColor:colors, borderRadius:3}]}};
 }
 function donut(labels, data, total, unitFn){
-  return {type:'doughnut', data:{labels, datasets:[{data, backgroundColor:PALETTE, borderColor:'#fff', borderWidth:1}]},
-    options:{cutout:'55%', plugins:{legend:legendSide(), tooltip:{callbacks:{label:c=>' '+c.label+'：'+unitFn(c.raw)+'（'+(c.raw/total*100).toFixed(1)+'%）'}}}}};
+  return {type:'doughnut', data:{labels, datasets:[{data, backgroundColor:PALETTE, borderColor:'#fff', borderWidth:2, hoverOffset:6}]},
+    options:{cutout:'64%', plugins:{legend:legendSide(), tooltip:{callbacks:{label:c=>' '+c.label+'：'+unitFn(c.raw)+'（'+(c.raw/total*100).toFixed(1)+'%）'}}}}};
 }
 
 /* ---------- 特別股 ---------- */
@@ -1861,6 +1933,27 @@ const chartSel = {};
 Chart.defaults.font.family = "'DM Sans',sans-serif";
 Chart.defaults.font.size = 11;
 Chart.defaults.color = CC.text2;
+// 統一圖表外觀：深藍提示框、圓點圖例、淡格線、柱寬上限
+Object.assign(Chart.defaults.plugins.tooltip, {backgroundColor:'rgba(13,27,62,.94)', titleColor:'#fff', bodyColor:'#E2E8F0',
+  padding:10, cornerRadius:8, boxPadding:4, usePointStyle:true, titleFont:{weight:'600',size:12}, bodyFont:{size:12}});
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyle = 'circle';
+Chart.defaults.plugins.legend.labels.boxWidth = 8;
+Chart.defaults.plugins.legend.labels.boxHeight = 8;
+Chart.defaults.plugins.legend.labels.padding = 14;
+Chart.defaults.scale.grid.color = '#EEF2F7';
+Chart.defaults.scale.border.display = false;
+Chart.defaults.elements.bar.maxBarThickness = 40;
+Chart.defaults.elements.line.borderWidth = 2;
+// 圓餅圖中央顯示合計
+Chart.register({id:'donutCenter', afterDraw(chart){
+  if(chart.config.type!=='doughnut') return;
+  const meta = chart.getDatasetMeta(0); if(!meta.data.length) return;
+  const {x,y} = meta.data[0]; const total = chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+  const ctx = chart.ctx; ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#94A3B8'; ctx.font="11px 'DM Sans',sans-serif"; ctx.fillText('合計', x, y-12);
+  ctx.fillStyle='#0D1B3E'; ctx.font="600 16px 'DM Mono',monospace"; ctx.fillText('$'+fmtK(total)+' 仟', x, y+8);
+  ctx.restore(); }});
 
 function drawChart(panel){
   const defs = CHART_DEFS[panel], key = chartSel[panel];
