@@ -121,6 +121,24 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 #panel-7839 .dc7839-date{font-size:13px;font-family:'DM Mono',monospace;color:#0f6e56}
 #panel-7839 .dc7839-amt{font-size:12px;color:#1f1e1c;margin-top:6px}
 @media(max-width:800px){#panel-7839 .div-row7839{grid-template-columns:1fr}}
+#panel-7839 .adv-card7839{background:#fff;border:.5px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(13,27,62,.04)}
+#panel-7839 .adv-h7839{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+#panel-7839 .adv-t7839{font-size:14px;font-weight:500;color:var(--navy);display:flex;align-items:center;gap:8px}
+#panel-7839 .adv-t7839 .ic{width:26px;height:26px;border-radius:7px;background:var(--blue-lt);display:flex;align-items:center;justify-content:center;font-size:14px}
+#panel-7839 .adv-sum7839{display:flex;gap:4px}
+#panel-7839 .adv-sum7839 span{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500}
+#panel-7839 .adv-grid7839{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}
+#panel-7839 .adv7839{display:flex;gap:12px;padding:12px 0;border-bottom:.5px solid var(--border)}
+#panel-7839 .adv7839-lv{flex-shrink:0;width:44px;text-align:center;padding:3px 0;border-radius:5px;font-size:11px;font-weight:500;height:fit-content}
+#panel-7839 .adv7839-t{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+#panel-7839 .adv7839-n{font-size:13px;color:var(--text2);line-height:1.6}
+#panel-7839 .lv-good{background:var(--green-lt);color:var(--green-dk)}
+#panel-7839 .lv-warn{background:var(--amber-lt);color:var(--amber-dk)}
+#panel-7839 .lv-risk{background:var(--red-lt);color:var(--red-dk)}
+#panel-7839 .lv-info{background:#EEF2F7;color:var(--text2)}
+#panel-7839 .lv-note{background:var(--navy);color:#fff}
+#panel-7839 .adv-foot7839{font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6}
+@media(max-width:800px){#panel-7839 .adv-grid7839{grid-template-columns:1fr}}
 
 /* ---- 特別股投資報告樣式 ---- */
 #panel-pref .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
@@ -383,6 +401,9 @@ footer{text-align:center;padding:24px 0 0;font-size:11px;color:var(--text3);bord
 
     <div class="sec mb18" style="margin-top:24px">除息資訊</div>
     <div class="div-row7839 mb24" id="exdiv-row-7839"></div>
+
+    <div class="sec mb18" style="margin-top:24px">觀察與建議</div>
+    <div class="adv-card7839 mb24" id="advice7839"><div class="adv7839-n">載入中...</div></div>
 
     <footer>收盤價／成交量資料來源：Google Sheets ｜ 僅供內部參考，非即時報價</footer>
   </div>
@@ -736,11 +757,14 @@ function normDate7839(d){
 function render7839(idx){
   let shares = 0, cost = 0, divShares = 0;
   for(let i = 0; i <= idx; i++){
-    const before = normDate7839(records7839[i].date) < EXDIV_INFO_7839.exDivDate;  // 除權息交易日前買進才參與配息
-    records7839[i].lots.forEach(function(l){ shares += l.qty; cost += l.price * l.qty + l.fee; if(before) divShares += l.qty; });
+    records7839[i].lots.forEach(function(l){ shares += l.qty; cost += l.price * l.qty + l.fee; });
   }
-  const viewDate = normDate7839(records7839[idx].date);
-  const divPaid = viewDate >= EXDIV_INFO_7839.payDate;   // 所選日期已過發放日 = 已入帳
+  // 股利為實際入帳數字：除權息交易日前買進的全部股數 × 每股配發（不隨所選交易日變動）
+  records7839.forEach(function(r){
+    if(normDate7839(r.date) < EXDIV_INFO_7839.exDivDate) r.lots.forEach(function(l){ divShares += l.qty; });
+  });
+  const todayStr7839 = new Date().toLocaleDateString('sv-SE');           // YYYY-MM-DD
+  const divPaid = todayStr7839 >= EXDIV_INFO_7839.payDate;               // 今天已過發放日 = 已入帳
   const isLatest = idx === records7839.length - 1;
   const useLive = isLatest && livePrice7839 !== null;
   const close = useLive ? livePrice7839 : records7839[idx].closePrice;
@@ -765,7 +789,7 @@ function render7839(idx){
 
   document.getElementById('gainMetrics7839').innerHTML =
     '<div class="card7839 ' + gainCls + '"><div class="label">價差損益</div><div class="value">' + (gain>=0?'+':'') + '$' + fmtK(gain) + ' 仟元</div><div class="sub">' + (gainPct>=0?'+':'') + gainPct.toFixed(2) + '%</div></div>' +
-    '<div class="card7839 warn"><div class="label">' + (divPaid ? '已領股利' : '預估股利') + '</div><div class="value">$' + fmtK(divTotal) + ' 仟元</div><div class="sub">' + fmt(divShares) + ' 股 × 每股 ' + DIVIDEND_PER_SHARE_7839.toFixed(4) + '</div></div>' +
+    '<div class="card7839 warn"><div class="label">' + (divPaid ? '已領股利' : '預估股利') + '</div><div class="value">$' + fmtK(divTotal) + ' 仟元</div><div class="sub">' + fmt(divShares) + ' 股 × 每股 ' + DIVIDEND_PER_SHARE_7839.toFixed(4) + (divPaid ? '　' + EXDIV_INFO_7839.payDate.substring(5).replace('-','/').replace(/^0/,'') + ' 已入帳' : '') + '</div></div>' +
     '<div class="card7839 ' + (potential>=0?'pos':'neg') + '"><div class="label">含息總損益</div><div class="value">' + (potential>=0?'+':'') + '$' + fmtK(potential) + ' 仟元</div><div class="sub">' + (potentialPct>=0?'+':'') + potentialPct.toFixed(2) + '%</div></div>';
 
   document.getElementById('lotsBody7839').innerHTML = records7839[idx].lots.map(function(l){
@@ -777,6 +801,8 @@ function render7839(idx){
 
   window.state7839 = { idx: idx, close: close, divShares: divShares, divTotal: divTotal };
   renderExDivDynamic7839(shares, divTotal, potentialPct);
+  renderAdvice7839({ idx, shares, cost, avgCost, close, gain, gainPct, divTotal, divPaid, potential, potentialPct,
+    volume: (useLive && liveVolume7839 !== null) ? liveVolume7839 : records7839[idx].volume });
 
   // 更新總覽頁彙總資料
   window.summary7839 = { cost: cost, mkt: marketValue, gain: gain, div: divTotal, live: useLive };
@@ -795,6 +821,94 @@ function render7839(idx){
 
   updateOverview();
   refreshCharts();
+}
+
+
+/* -----------------------------------------------------------------
+   達人網（7839）觀察與建議
+   依所選交易日的持股、成本、股價、成交量與股利以規則自動產生，
+   屬一般性觀察，非個人化投資建議。
+   MANUAL_NOTES_7839：可自行加入人工註記，例如 {tag:'續抱', note:'策略性持股，與本業合作中'}
+----------------------------------------------------------------- */
+const MANUAL_NOTES_7839 = [];
+
+function renderAdvice7839(d){
+  const box = document.getElementById('advice7839');
+  if(!box) return;
+  const out = [];
+  const lots = d.shares / 1000;                       // 持股張數
+  const perShare = DIVIDEND_PER_SHARE_7839;
+  const payMD = EXDIV_INFO_7839.payDate.substring(5).replace('-','/').replace(/^0/,'');
+
+  // 1. 價差位置
+  if(d.gain >= 0){
+    out.push({lv:'good', t:'價差損益', n:`股價 $${d.close.toFixed(2)} 高於平均成本 $${d.avgCost.toFixed(2)}，帳面獲利 ${d.gainPct.toFixed(2)}%`});
+  } else {
+    const need = (d.avgCost/d.close - 1)*100;
+    out.push({lv: d.gainPct > -5 ? 'warn' : 'risk', t:'價差損益',
+      n:`股價 $${d.close.toFixed(2)} 低於平均成本 $${d.avgCost.toFixed(2)}，帳損 ${Math.abs(d.gainPct).toFixed(2)}%；回到成本需上漲 ${need.toFixed(1)}%`});
+  }
+
+  // 2. 股利對損益的貢獻
+  if(d.gain < 0){
+    const cover = d.divTotal / Math.abs(d.gain) * 100;
+    out.push({lv: d.potential >= 0 ? 'good' : 'warn', t:'股利抵減',
+      n: d.potential >= 0
+        ? `已領股利 $${fmtK(d.divTotal)} 仟元已完全抵銷價差損失，含息總損益 +$${fmtK(d.potential)} 仟元（${d.potentialPct>=0?'+':''}${d.potentialPct.toFixed(2)}%）`
+        : `已領股利 $${fmtK(d.divTotal)} 仟元抵銷價差損失的 ${cover.toFixed(0)}%，含息總損益仍為 -$${fmtK(Math.abs(d.potential))} 仟元`});
+  } else {
+    out.push({lv:'good', t:'含息總損益', n:`價差 +$${fmtK(d.gain)} 仟元 ＋ 股利 $${fmtK(d.divTotal)} 仟元，含息報酬 ${d.potentialPct.toFixed(2)}%`});
+  }
+
+  // 3. 殖利率
+  const yCost = perShare / d.avgCost * 100, yPx = perShare / d.close * 100;
+  out.push({lv: yCost >= 4 ? 'good' : 'info', t:'現金殖利率',
+    n:`每股配 $${perShare.toFixed(4)}：以平均成本計 ${yCost.toFixed(2)}%，以目前股價計 ${yPx.toFixed(2)}%`});
+
+  // 4. 流動性（持股張數 vs 成交量）
+  const vols = records7839.slice(0, d.idx+1).map(r=>r.volume).filter(v=>v>0);
+  const avgVol = vols.length ? vols.reduce((a,b)=>a+b,0)/vols.length : 0;
+  const refVol = avgVol || d.volume;
+  if(refVol > 0){
+    const days = lots / refVol;
+    out.push({lv: days >= 10 ? 'warn' : 'info', t:'成交量與流動性',
+      n:`持股 ${fmt(lots)} 張，約為平均日成交量（${refVol.toFixed(1)} 張）的 ${days.toFixed(0)} 倍` +
+        (days >= 10 ? '；交易量偏低，若需調整部位宜分批、掛限價單，避免影響股價' : '；流動性尚可')});
+  }
+
+  // 5. 最近一次買進
+  let last = null;
+  for(let i=d.idx;i>=0 && !last;i--) if(records7839[i].lots.length) last = {date:records7839[i].date, lot:records7839[i].lots[records7839[i].lots.length-1]};
+  if(last){
+    const ch = (d.close/last.lot.price - 1)*100;
+    out.push({lv: ch>=0?'good':'info', t:'最近一次買進',
+      n:`${last.date} 以 $${last.lot.price.toFixed(2)} 買進 ${fmt(last.lot.qty)} 股，目前股價${ch>=0?'高於':'低於'}該價位 ${Math.abs(ch).toFixed(1)}%`});
+  }
+
+  // 6. 攤平試算（僅在帳損時提供，作為參考數字）
+  if(d.gain < 0){
+    const addLots = Math.max(1, Math.round(lots*0.1));      // 以現有張數約一成試算
+    const newAvg = (d.cost + d.close*addLots*1000) / (d.shares + addLots*1000);
+    out.push({lv:'info', t:'攤平試算（參考）',
+      n:`若以現價再買 ${addLots} 張，平均成本由 $${d.avgCost.toFixed(2)} 降至約 $${newAvg.toFixed(2)}（未計手續費）；是否加碼宜併同公司營運與策略合作評估`});
+  }
+
+  // 7. 股利時程
+  out.push({lv:'info', t:'股利時程', n: d.divPaid
+    ? `本年度現金股利 $${fmtK(d.divTotal)} 仟元已於 ${payMD} 入帳（除息前持有 ${fmt(d.divTotal/perShare)} 股），留意明年股東會配息決議`
+    : `本年度現金股利預計 ${payMD} 發放，金額 $${fmtK(d.divTotal)} 仟元`});
+
+  // 8. 人工註記
+  MANUAL_NOTES_7839.forEach(m=>out.push({lv:'note', t:'人工註記 · '+m.tag, n:m.note}));
+
+  const LV = {good:'正面', warn:'留意', risk:'風險', info:'資訊', note:'註記'};
+  const cnt = k => out.filter(o=>o.lv===k).length;
+  const sum = ['good','warn','risk'].filter(k=>cnt(k)).map(k=>`<span class="lv-${k}">${LV[k]} ${cnt(k)}</span>`).join('');
+  box.innerHTML =
+    `<div class="adv-h7839"><div class="adv-t7839"><span class="ic">💡</span>達人網（7839）觀察與建議　<span style="font-size:11px;color:var(--text3);font-weight:400">依 ${records7839[d.idx].date} 資料</span></div><div class="adv-sum7839">${sum}</div></div>` +
+    `<div class="adv-grid7839">` +
+    out.map(o=>`<div class="adv7839"><span class="adv7839-lv lv-${o.lv}">${LV[o.lv]}</span><div><div class="adv7839-t">${o.t}</div><div class="adv7839-n">${o.n}</div></div></div>`).join('') +
+    `</div><div class="adv-foot7839">建議內容依所選交易日的持股、成本、股價、成交量與股利以規則自動產生，屬一般性觀察，非個人化投資建議；實際操作請綜合評估。</div>`;
 }
 
 /* =====================================================================
